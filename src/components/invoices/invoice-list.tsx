@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
-import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X } from "lucide-react";
+import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, Loader2 } from "lucide-react";
 import { SelectNative } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { InvoiceApprovalDialog } from "@/components/invoices/invoice-approval-dialog";
@@ -68,6 +68,7 @@ export function InvoiceList({
   const [vendorFilter, setVendorFilter] = useState<string>("");
   const [lineItemFilter, setLineItemFilter] = useState<string>(initialLineItemFilter);
   const [filtersOpen, setFiltersOpen] = useState(!!initialLineItemFilter);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   const { user, canEdit, canMarkPaid } = useAuth();
 
@@ -160,6 +161,46 @@ export function InvoiceList({
     if (lineItemFilter && inv.lineItem?.id !== lineItemFilter) return false;
     return true;
   });
+
+  // Invoices in the current view that have a downloadable PDF
+  const invoicesWithPdf = filteredInvoices.filter(
+    (inv) => (inv.invoiceNumber?.startsWith("DF-") && inv.id) || inv.filePath
+  );
+
+  const handleDownloadAll = async () => {
+    if (!invoicesWithPdf.length) return;
+    setIsDownloading(true);
+    try {
+      const res = await fetch("/api/invoices/download-zip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceIds: invoicesWithPdf.map((inv) => inv.id) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error || "Failed to generate ZIP");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      // Build a meaningful filename from the active filters
+      const parts = ["invoices"];
+      if (statusFilter !== "All") parts.push(statusFilter.toLowerCase());
+      if (groupFilter !== "All") parts.push(groupFilter.toLowerCase().replace(/\s+/g, "-"));
+      a.download = `${parts.join("-")}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Failed to download invoices",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const columns: ColumnDef<InvoiceWithRelations, unknown>[] = [
     {
@@ -407,6 +448,23 @@ export function InvoiceList({
             >
               <X className="h-3.5 w-3.5" />
               Clear
+            </Button>
+          )}
+          {invoicesWithPdf.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadAll}
+              disabled={isDownloading}
+              className="gap-1.5 ml-auto"
+              title={`Download ${invoicesWithPdf.length} invoice PDF${invoicesWithPdf.length !== 1 ? "s" : ""} as ZIP`}
+            >
+              {isDownloading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Archive className="h-3.5 w-3.5" />
+              )}
+              Download {invoicesWithPdf.length} PDF{invoicesWithPdf.length !== 1 ? "s" : ""}
             </Button>
           )}
         </div>
