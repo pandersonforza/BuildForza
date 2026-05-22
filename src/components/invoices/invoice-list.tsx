@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
-import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, Loader2 } from "lucide-react";
+import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, Loader2, ClipboardList } from "lucide-react";
 import { SelectNative } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { InvoiceApprovalDialog } from "@/components/invoices/invoice-approval-dialog";
@@ -392,18 +392,31 @@ export function InvoiceList({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Invoices</h2>
-        {canEdit && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setPayAppOpen(true)}>
-              <FileText className="h-4 w-4 mr-2" />
-              Pay App Entry
-            </Button>
-            <Button onClick={() => setUploadOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Upload Invoice
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {showProject && (
+            <a
+              href="/api/invoices/approved-report"
+              download={`ApprovedInvoices_${new Date().toISOString().slice(0, 10)}.pdf`}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+              title="Download a PDF report of all approved, unpaid invoices grouped by entity"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Approved Report
+            </a>
+          )}
+          {canEdit && (
+            <>
+              <Button variant="outline" onClick={() => setPayAppOpen(true)}>
+                <FileText className="h-4 w-4 mr-2" />
+                Pay App Entry
+              </Button>
+              <Button onClick={() => setUploadOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Upload Invoice
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filter bar */}
