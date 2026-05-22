@@ -175,16 +175,19 @@ export async function GET() {
     draw(formatCurrency(grandTotal), pageWidth - margin, y, { bold: true, size: 11, color: teal, right: true });
     y -= 28;
 
-    // ── Detail sections ───────────────────────────────────────
+    // ── Detail sections (one page per group) ─────────────────
     for (const [group, rows] of activeGroups) {
       const subtotal = rows.reduce((s, r) => s + r.amount, 0);
 
-      ensureSpace(60);
+      // Always start each group on a fresh page
+      page = doc.addPage([pageWidth, pageHeight]);
+      y = pageHeight - margin;
 
       // Group header
-      hline(y + 4, margin, pageWidth - margin, 0.5, light);
-      draw(group.toUpperCase(), margin, y - 4, { bold: true, size: 11, color: teal });
-      y -= 18;
+      draw(group.toUpperCase(), margin, y, { bold: true, size: 14, color: teal });
+      y -= 8;
+      hline(y, margin, pageWidth - margin, 1.5, teal);
+      y -= 20;
 
       // Column header row
       draw('Vendor',     col.vendor.x,  y, { bold: true, size: 8, color: muted });
@@ -221,8 +224,9 @@ export async function GET() {
       y -= 24;
     }
 
-    // ── Grand total footer ────────────────────────────────────
-    ensureSpace(32);
+    // ── Grand total — bottom of the last group's page ────────
+    ensureSpace(40);
+    y -= 8;
     hline(y, margin, pageWidth - margin, 1.5, teal);
     y -= 14;
     draw('GRAND TOTAL', margin, y, { bold: true, size: 11 });
