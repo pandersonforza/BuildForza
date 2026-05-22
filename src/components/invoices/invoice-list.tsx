@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
-import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, Loader2, ClipboardList } from "lucide-react";
+import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, LoaderCircle, ClipboardList } from "lucide-react";
 import { SelectNative } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { InvoiceApprovalDialog } from "@/components/invoices/invoice-approval-dialog";
@@ -473,7 +473,7 @@ export function InvoiceList({
               title={`Download ${invoicesWithPdf.length} invoice PDF${invoicesWithPdf.length !== 1 ? "s" : ""} as ZIP`}
             >
               {isDownloading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Archive className="h-3.5 w-3.5" />
               )}

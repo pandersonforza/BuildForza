@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 
   // Optimize package imports to reduce bundle size
   experimental: {
-    optimizePackageImports: ["recharts", "lucide-react", "@tanstack/react-table"],
+    optimizePackageImports: ["recharts", "@tanstack/react-table"],
   },
 
   // Cache static assets aggressively
