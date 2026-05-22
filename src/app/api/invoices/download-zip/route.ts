@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import JSZip from 'jszip';
+import { zipSync } from 'fflate';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { generateDevFeePdf } from '@/lib/generate-dev-fee-pdf';
@@ -39,18 +39,21 @@ export async function POST(request: NextRequest) {
     });
 
     const token = process.env.BLOB_READ_WRITE_TOKEN;
-    const zip = new JSZip();
 
-    // Track filenames to avoid collisions
+    // Collect files for the ZIP: { filename: Uint8Array }
+    const zipFiles: Record<string, Uint8Array> = {};
+
+    // Track base names to avoid collisions
     const seen = new Map<string, number>();
 
     for (const invoice of invoices) {
-      let pdfBuffer: Buffer | null = null;
+      let pdfData: Uint8Array | null = null;
 
       if (invoice.invoiceNumber?.startsWith('DF-')) {
         // Generate dev fee PDF on the fly
         try {
-          pdfBuffer = await generateDevFeePdf(invoice);
+          const buf = await generateDevFeePdf(invoice);
+          pdfData = new Uint8Array(buf);
         } catch (err) {
           console.error(`Failed to generate PDF for invoice ${invoice.id}:`, err);
           continue;
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
           if (res.ok) {
-            pdfBuffer = Buffer.from(await res.arrayBuffer());
+            pdfData = new Uint8Array(await res.arrayBuffer());
           }
         } catch (err) {
           console.error(`Failed to fetch PDF for invoice ${invoice.id}:`, err);
@@ -70,28 +73,28 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (!pdfBuffer) continue;
+      if (!pdfData) continue;
 
       // Build a readable filename: "VendorName - INV-0001.pdf"
       const parts = [safeFilename(invoice.vendorName ?? 'Invoice')];
       if (invoice.invoiceNumber) parts.push(safeFilename(invoice.invoiceNumber));
-      let base = parts.join(' - ');
+      const base = parts.join(' - ');
 
       // Deduplicate
       const count = seen.get(base) ?? 0;
       seen.set(base, count + 1);
       const filename = count === 0 ? `${base}.pdf` : `${base} (${count}).pdf`;
 
-      zip.file(filename, pdfBuffer);
+      zipFiles[filename] = pdfData;
     }
 
-    if (zip.files && Object.keys(zip.files).length === 0) {
+    if (Object.keys(zipFiles).length === 0) {
       return NextResponse.json({ error: 'No PDFs could be generated for the selected invoices' }, { status: 404 });
     }
 
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+    const zipped = zipSync(zipFiles, { level: 6 });
 
-    return new NextResponse(new Uint8Array(zipBuffer), {
+    return new NextResponse(zipped, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': 'attachment; filename="invoices.zip"',
