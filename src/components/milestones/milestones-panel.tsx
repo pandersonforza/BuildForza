@@ -39,7 +39,6 @@ interface Milestone {
   completedDate: string | null;
   status: string;
   sortOrder: number;
-  teamBonused: boolean;
 }
 
 interface MilestonesPanelProps {
@@ -66,16 +65,22 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
   const [invoiceUsers, setInvoiceUsers] = useState<{ id: string; name: string }[]>([]);
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [teamBonused, setTeamBonused] = useState(false);
+  const [isTogglingBonus, setIsTogglingBonus] = useState(false);
 
   const { toast } = useToast();
   const { canEdit, user } = useAuth();
 
   const fetchMilestones = useCallback(async () => {
     try {
-      const res = await fetch(`/api/milestones?projectId=${projectId}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const [msRes, projRes] = await Promise.all([
+        fetch(`/api/milestones?projectId=${projectId}`),
+        fetch(`/api/projects/${projectId}`),
+      ]);
+      if (!msRes.ok) throw new Error();
+      const [data, proj] = await Promise.all([msRes.json(), projRes.json()]);
       setMilestones(data);
+      if (proj?.teamBonused !== undefined) setTeamBonused(proj.teamBonused);
     } catch {
       toast({ title: "Error", description: "Failed to load milestones", variant: "destructive" });
     } finally {
@@ -189,17 +194,20 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
     }
   };
 
-  const handleToggleBonused = async (milestone: Milestone) => {
+  const handleToggleBonused = async () => {
+    setIsTogglingBonus(true);
     try {
-      const res = await fetch(`/api/milestones/${milestone.id}`, {
+      const res = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamBonused: !milestone.teamBonused }),
+        body: JSON.stringify({ teamBonused: !teamBonused }),
       });
       if (!res.ok) throw new Error();
-      fetchMilestones();
+      setTeamBonused((v) => !v);
     } catch {
-      toast({ title: "Error", description: "Failed to update milestone", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to update bonus status", variant: "destructive" });
+    } finally {
+      setIsTogglingBonus(false);
     }
   };
 
@@ -416,7 +424,6 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                     <th className="py-3 pr-4 text-right">Remaining</th>
                     <th className="py-3 pr-4">Expected Date</th>
                     <th className="py-3 pr-4">Completed</th>
-                    <th className="py-3 pr-4 text-center">Team Bonused</th>
                     <th className="py-3"></th>
                   </tr>
                 </thead>
@@ -479,28 +486,6 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                             ? parseLocalDate(m.completedDate).toLocaleDateString()
                             : "—"}
                         </td>
-                        <td className="py-3 pr-4 text-center">
-                          <button
-                            onClick={() => canEdit && handleToggleBonused(m)}
-                            className={`inline-flex items-center justify-center ${canEdit ? "" : "cursor-default"}`}
-                            title={!canEdit ? "" : m.teamBonused ? "Mark team as not bonused" : "Mark team as bonused"}
-                            disabled={!canEdit}
-                          >
-                            <div
-                              className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
-                                m.teamBonused
-                                  ? "bg-indigo-500 border-indigo-500"
-                                  : "border-muted-foreground/40 hover:border-indigo-400"
-                              }`}
-                            >
-                              {m.teamBonused && (
-                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </div>
-                          </button>
-                        </td>
                         {canEdit && (
                           <td className="py-3">
                             <div className="flex items-center gap-1">
@@ -542,10 +527,50 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                     <td className="py-3 pr-4 text-right text-amber-400">
                       {formatCurrency(totalRemaining)}
                     </td>
-                    <td colSpan={4}></td>
+                    <td colSpan={3}></td>
                   </tr>
                 </tfoot>
               </table>
+            </div>
+          )}
+
+          {/* Project-level team bonus toggle */}
+          {milestones.length > 0 && (
+            <div className={`mt-4 pt-4 border-t border-border flex items-center justify-between ${
+              teamBonused ? "" : completedCount === milestones.length ? "text-amber-500" : ""
+            }`}>
+              <div>
+                <p className="text-sm font-medium">Team Bonused</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {teamBonused
+                    ? "The team has been bonused out for this project."
+                    : "Mark this once the team bonus has been paid out."}
+                </p>
+              </div>
+              <button
+                onClick={() => canEdit && !isTogglingBonus && handleToggleBonused()}
+                disabled={!canEdit || isTogglingBonus}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  canEdit && !isTogglingBonus ? "cursor-pointer" : "cursor-default opacity-60"
+                } ${
+                  teamBonused
+                    ? "bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25"
+                    : completedCount === milestones.length
+                    ? "bg-amber-400/15 text-amber-500 hover:bg-amber-400/25"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                <div className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
+                  teamBonused ? "bg-indigo-500 border-indigo-500" : "border-current"
+                }`}>
+                  {teamBonused && (
+                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                {teamBonused ? "Bonused" : "Mark as Bonused"}
+              </button>
             </div>
           )}
         </CardContent>

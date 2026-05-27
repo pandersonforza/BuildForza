@@ -95,6 +95,7 @@ export async function PUT(
         ...(body.holdStartDate !== undefined && { holdStartDate: body.holdStartDate ? new Date(body.holdStartDate) : null }),
         ...(body.holdEndDate !== undefined && { holdEndDate: body.holdEndDate ? new Date(body.holdEndDate) : null }),
         ...(body.completionNotes !== undefined && { completionNotes: body.completionNotes }),
+        ...(body.teamBonused !== undefined && { teamBonused: body.teamBonused }),
       },
     });
 

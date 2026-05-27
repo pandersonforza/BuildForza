@@ -28,7 +28,7 @@ interface MilestoneWithProject {
   completedDate: string | null;
   status: string;
   teamBonused: boolean;
-  project: { id: string; name: string; address: string; status: string };
+  project: { id: string; name: string; address: string; status: string; teamBonused: boolean };
 }
 
 const PIE_COLORS = ["#10b981", "#64748b"];
@@ -119,7 +119,7 @@ export default function MilestonesOverviewPage() {
     .map(([year, data]) => ({ year, ...data, remaining: data.expected - data.paid }));
 
   // Group milestones by project for the cards
-  const projectGroups = new Map<string, { project: { id: string; name: string; address: string }; milestones: MilestoneWithProject[] }>();
+  const projectGroups = new Map<string, { project: MilestoneWithProject['project']; milestones: MilestoneWithProject[] }>();
   for (const m of filteredMilestones) {
     const existing = projectGroups.get(m.project.id);
     if (existing) {
@@ -307,7 +307,7 @@ export default function MilestonesOverviewPage() {
         const pPaid = pMilestones.reduce((s, m) => s + m.paidAmount, 0);
         const pCompleted = pMilestones.filter((m) => m.status === "Completed").length;
         const allComplete = pMilestones.length > 0 && pCompleted === pMilestones.length;
-        const bonusPending = allComplete && pMilestones.some((m) => !m.teamBonused);
+        const bonusPending = allComplete && !project.teamBonused;
 
         return (
           <Card

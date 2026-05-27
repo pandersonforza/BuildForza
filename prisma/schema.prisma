@@ -88,6 +88,7 @@ model Project {
   holdStartDate    DateTime?
   holdEndDate      DateTime?
   completionNotes  String?
+  teamBonused      Boolean   @default(false)
 
   budgetCategories BudgetCategory[]
   contracts        Contract[]
@@ -285,7 +286,6 @@ model Milestone {
   completedDate DateTime?
   status       String    @default("Pending")
   sortOrder    Int       @default(0)
-  teamBonused  Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
