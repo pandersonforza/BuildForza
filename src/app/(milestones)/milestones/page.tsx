@@ -27,6 +27,7 @@ interface MilestoneWithProject {
   expectedDate: string | null;
   completedDate: string | null;
   status: string;
+  teamBonused: boolean;
   project: { id: string; name: string; address: string; status: string };
 }
 
@@ -305,9 +306,14 @@ export default function MilestonesOverviewPage() {
         const pExpected = pMilestones.reduce((s, m) => s + m.devFee, 0);
         const pPaid = pMilestones.reduce((s, m) => s + m.paidAmount, 0);
         const pCompleted = pMilestones.filter((m) => m.status === "Completed").length;
+        const allComplete = pMilestones.length > 0 && pCompleted === pMilestones.length;
+        const bonusPending = allComplete && pMilestones.some((m) => !m.teamBonused);
 
         return (
-          <Card key={project.id}>
+          <Card
+            key={project.id}
+            className={bonusPending ? "border-amber-400 bg-amber-400/10" : ""}
+          >
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -318,7 +324,12 @@ export default function MilestonesOverviewPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">{project.address}</p>
                   )}
                 </div>
-                <div className="flex gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  {bonusPending && (
+                    <span className="text-xs font-semibold uppercase tracking-wide text-amber-500 bg-amber-400/20 px-2 py-0.5 rounded">
+                      Bonus Outstanding
+                    </span>
+                  )}
                   <span>Expected: <span className="text-foreground font-medium">{formatCurrency(pExpected)}</span></span>
                   <span>Paid: <span className="text-emerald-400 font-medium">{formatCurrency(pPaid)}</span></span>
                   <span>{pCompleted}/{pMilestones.length} complete</span>
