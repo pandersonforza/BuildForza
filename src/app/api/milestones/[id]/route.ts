@@ -18,6 +18,7 @@ export async function PUT(
     if (data.completedDate !== undefined) updateData.completedDate = data.completedDate ? new Date(data.completedDate) : null;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
+    if (data.teamBonused !== undefined) updateData.teamBonused = data.teamBonused;
 
     const milestone = await prisma.milestone.update({
       where: { id },

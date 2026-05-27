@@ -39,6 +39,7 @@ interface Milestone {
   completedDate: string | null;
   status: string;
   sortOrder: number;
+  teamBonused: boolean;
 }
 
 interface MilestonesPanelProps {
@@ -180,6 +181,20 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, completedDate, paidAmount }),
+      });
+      if (!res.ok) throw new Error();
+      fetchMilestones();
+    } catch {
+      toast({ title: "Error", description: "Failed to update milestone", variant: "destructive" });
+    }
+  };
+
+  const handleToggleBonused = async (milestone: Milestone) => {
+    try {
+      const res = await fetch(`/api/milestones/${milestone.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamBonused: !milestone.teamBonused }),
       });
       if (!res.ok) throw new Error();
       fetchMilestones();
@@ -401,6 +416,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                     <th className="py-3 pr-4 text-right">Remaining</th>
                     <th className="py-3 pr-4">Expected Date</th>
                     <th className="py-3 pr-4">Completed</th>
+                    <th className="py-3 pr-4 text-center">Team Bonused</th>
                     <th className="py-3"></th>
                   </tr>
                 </thead>
@@ -463,6 +479,28 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                             ? parseLocalDate(m.completedDate).toLocaleDateString()
                             : "—"}
                         </td>
+                        <td className="py-3 pr-4 text-center">
+                          <button
+                            onClick={() => canEdit && handleToggleBonused(m)}
+                            className={`inline-flex items-center justify-center ${canEdit ? "" : "cursor-default"}`}
+                            title={!canEdit ? "" : m.teamBonused ? "Mark team as not bonused" : "Mark team as bonused"}
+                            disabled={!canEdit}
+                          >
+                            <div
+                              className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
+                                m.teamBonused
+                                  ? "bg-indigo-500 border-indigo-500"
+                                  : "border-muted-foreground/40 hover:border-indigo-400"
+                              }`}
+                            >
+                              {m.teamBonused && (
+                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          </button>
+                        </td>
                         {canEdit && (
                           <td className="py-3">
                             <div className="flex items-center gap-1">
@@ -504,7 +542,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                     <td className="py-3 pr-4 text-right text-amber-400">
                       {formatCurrency(totalRemaining)}
                     </td>
-                    <td colSpan={3}></td>
+                    <td colSpan={4}></td>
                   </tr>
                 </tfoot>
               </table>
