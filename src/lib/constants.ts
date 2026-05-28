@@ -193,6 +193,7 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 
   // Invoice statuses
   "Pending Review": { bg: "bg-amber-900/40", text: "text-amber-400" },
+  Checked: { bg: "bg-sky-900/40", text: "text-sky-400" },
   Rejected: { bg: "bg-red-900/40", text: "text-red-400" },
   Paid: { bg: "bg-indigo-900/40", text: "text-indigo-400" },
 };
@@ -200,6 +201,7 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 export const INVOICE_STATUSES = [
   "Pending Review",
   "Submitted",
+  "Checked",
   "Approved",
   "Rejected",
   "Paid",

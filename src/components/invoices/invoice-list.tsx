@@ -115,6 +115,25 @@ export function InvoiceList({
     }
   };
 
+  const handleMarkChecked = async (invoiceId: string) => {
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Checked" }),
+      });
+      if (!res.ok) throw new Error("Failed to mark as checked");
+      toast({ title: "Invoice checked", description: "Invoice marked as data-verified." });
+      onMutate();
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to mark invoice as checked",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleMarkPaid = async (invoiceId: string) => {
     try {
       const res = await fetch(`/api/invoices/${invoiceId}`, {
@@ -135,7 +154,7 @@ export function InvoiceList({
   };
 
   // Derive unique filter options from invoice data
-  const uniqueStatuses = ["All", "Submitted", "Approved", "Paid"].filter(
+  const uniqueStatuses = ["All", "Pending Review", "Submitted", "Checked", "Approved", "Paid"].filter(
     (s) => s === "All" || invoices.some((i) => i.status === s)
   );
   const uniqueVendors = Array.from(new Set(invoices.map((i) => i.vendorName).filter(Boolean))).sort();
@@ -351,6 +370,28 @@ export function InvoiceList({
               </>
             )}
             {canEdit && status === "Submitted" && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleMarkChecked(row.original.id)}
+                >
+                  Mark Checked
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Delete invoice"
+                  onClick={() => {
+                    setDeleteId(row.original.id);
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </>
+            )}
+            {canEdit && status === "Checked" && (
               <Button
                 size="sm"
                 variant="outline"
@@ -369,7 +410,7 @@ export function InvoiceList({
                 Mark Paid
               </Button>
             )}
-            {user?.role === "admin" && status !== "Pending Review" && (
+            {user?.role === "admin" && status !== "Pending Review" && status !== "Submitted" && (
               <Button
                 variant="ghost"
                 size="icon"

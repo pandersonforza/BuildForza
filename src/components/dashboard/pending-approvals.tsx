@@ -44,7 +44,7 @@ export function PendingApprovals() {
   const fetchInvoices = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/invoices?status=Submitted&approverId=${user.id}`);
+      const res = await fetch(`/api/invoices?status=Checked&approverId=${user.id}`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setInvoices(data);

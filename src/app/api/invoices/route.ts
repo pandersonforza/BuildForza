@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         filePath: filePath ?? null,
         invoiceNumber: body.invoiceNumber ?? null,
         description: body.description ?? null,
-        status: body.status ?? 'Pending Review',
+        status: body.status ?? 'Submitted',
         projectId: body.projectId ?? null,
         budgetLineItemId: body.budgetLineItemId ?? null,
         aiConfidence: body.aiConfidence ?? null,

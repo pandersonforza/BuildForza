@@ -42,7 +42,7 @@ export function ReturnedInvoices() {
   const fetchInvoices = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/invoices?status=Pending Review&submittedById=${user.id}&returned=true`);
+      const res = await fetch(`/api/invoices?status=Submitted&submittedById=${user.id}&returned=true`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setInvoices(data);

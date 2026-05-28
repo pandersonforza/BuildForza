@@ -159,7 +159,7 @@ export function InvoiceApprovalDialog({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "Pending Review",
+          status: "Submitted",
           rejectionReason: returnReason.trim() || null,
         }),
       });
