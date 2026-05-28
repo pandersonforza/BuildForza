@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  'Pending Review': ['Submitted'],                           // backward compat
-  'Submitted': ['Checked', 'Approved', 'Rejected'],          // Approved = skip Checked step
-  'Checked': ['Approved', 'Rejected', 'Submitted'],          // Submitted = return to submitter
+  'Pending Review': ['Submitted'],                      // backward compat
+  'Submitted': ['Checked', 'Rejected'],
+  'Checked': ['Approved', 'Rejected', 'Submitted'],     // Submitted = return to submitter
   'Approved': ['Paid'],
 };
 
@@ -203,67 +203,6 @@ export async function PUT(
               data: {
                 actualCost: { increment: finalAmount },
               },
-            });
-          }
-
-          return updated;
-        });
-
-        return NextResponse.json(invoice);
-      }
-
-      // Submitted → Approved (skip Checked step — same logic, same budget increment)
-      if (currentStatus === 'Submitted' && newStatus === 'Approved') {
-        const finalAmount = body.amount !== undefined ? body.amount : existing.amount;
-        const finalLineItemId = body.budgetLineItemId !== undefined ? body.budgetLineItemId : existing.budgetLineItemId;
-        const isPayApp = existing.aiNotes?.includes('__payAppLineItems__');
-
-        if (!finalLineItemId && !isPayApp) {
-          return NextResponse.json(
-            { error: 'Invoice must have a budget line item to be approved' },
-            { status: 400 }
-          );
-        }
-
-        const invoice = await prisma.$transaction(async (tx) => {
-          const updated = await tx.invoice.update({
-            where: { id },
-            data: {
-              status: 'Approved',
-              approvedDate: new Date(),
-              ...(body.vendorName !== undefined && { vendorName: body.vendorName }),
-              ...(body.invoiceNumber !== undefined && { invoiceNumber: body.invoiceNumber }),
-              ...(body.amount !== undefined && { amount: body.amount }),
-              ...(body.description !== undefined && { description: body.description }),
-              ...(body.budgetLineItemId !== undefined && { budgetLineItemId: body.budgetLineItemId }),
-            },
-            include: {
-              project: true,
-              lineItem: { include: { category: true } },
-            },
-          });
-
-          if (isPayApp && existing.aiNotes) {
-            const match = existing.aiNotes.match(/__payAppLineItems__([\s\S]+)$/);
-            if (match) {
-              try {
-                const payAppItems: { lineItemId: string; amount: number }[] = JSON.parse(match[1]);
-                for (const item of payAppItems) {
-                  if (item.lineItemId && item.amount !== 0) {
-                    await tx.budgetLineItem.update({
-                      where: { id: item.lineItemId },
-                      data: { actualCost: { increment: item.amount } },
-                    });
-                  }
-                }
-              } catch {
-                console.error('Failed to parse pay app line items');
-              }
-            }
-          } else if (finalLineItemId) {
-            await tx.budgetLineItem.update({
-              where: { id: finalLineItemId },
-              data: { actualCost: { increment: finalAmount } },
             });
           }
 
