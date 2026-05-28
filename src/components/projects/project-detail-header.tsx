@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProjectForm } from "@/components/projects/project-form";
 import { Pencil, MapPin } from "lucide-react";
-import { formatPercent } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import type { Project } from "@/types";
 
@@ -31,8 +30,6 @@ export function ProjectDetailHeader({ project, budgetSummary, onMutate }: Projec
   const totalBudget = budgetSummary?.revisedBudget ?? project.totalBudget;
   const spent = budgetSummary?.actualCost ?? 0;
   const remaining = totalBudget - spent;
-  const pctComplete = budgetSummary?.percentComplete ?? 0;
-
   return (
     <>
       <div className="space-y-4">
@@ -63,7 +60,7 @@ export function ProjectDetailHeader({ project, budgetSummary, onMutate }: Projec
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <p className="text-sm text-muted-foreground">Total Budget</p>
@@ -80,18 +77,6 @@ export function ProjectDetailHeader({ project, budgetSummary, onMutate }: Projec
             <CardContent className="pt-6">
               <p className="text-sm text-muted-foreground">Remaining</p>
               <CurrencyDisplay amount={remaining} size="lg" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">% Complete</p>
-              <div className="text-lg font-semibold">{formatPercent(pctComplete)}</div>
-              <div className="h-2 w-full rounded-full bg-muted mt-2 overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${Math.min(pctComplete, 100)}%` }}
-                />
-              </div>
             </CardContent>
           </Card>
         </div>
