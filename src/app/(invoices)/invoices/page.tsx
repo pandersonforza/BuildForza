@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { InvoiceList } from "@/components/invoices/invoice-list";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { InvoiceWithRelations } from "@/types";
@@ -9,15 +9,22 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   const fetchInvoices = useCallback(async () => {
-    setIsLoading(true);
+    // Only show the full-page skeleton on the very first load.
+    // Subsequent calls (after approve / mark paid / delete) update
+    // data in the background so the user stays in their current view.
+    if (!hasLoadedOnce.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch("/api/invoices");
       if (!res.ok) throw new Error("Failed to fetch invoices");
       const data = await res.json();
       setInvoices(data);
+      hasLoadedOnce.current = true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

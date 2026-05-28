@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { InvoiceList } from "@/components/invoices/invoice-list";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,15 +15,19 @@ export default function ProjectInvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   const fetchInvoices = useCallback(async () => {
-    setIsLoading(true);
+    if (!hasLoadedOnce.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch(`/api/invoices?projectId=${projectId}`);
       if (!res.ok) throw new Error("Failed to fetch invoices");
       const data = await res.json();
       setInvoices(data);
+      hasLoadedOnce.current = true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
