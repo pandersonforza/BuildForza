@@ -379,6 +379,13 @@ export function InvoiceList({
                   Mark Checked
                 </Button>
                 <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setReviewingInvoice(row.original)}
+                >
+                  Review
+                </Button>
+                <Button
                   variant="ghost"
                   size="icon"
                   title="Delete invoice"

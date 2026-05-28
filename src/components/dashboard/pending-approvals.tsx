@@ -44,9 +44,18 @@ export function PendingApprovals() {
   const fetchInvoices = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/invoices?status=Checked&approverId=${user.id}`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
+      // Show both Submitted and Checked invoices — Checked went through the
+      // data-verification step; Submitted can still be approved directly.
+      const [submittedRes, checkedRes] = await Promise.all([
+        fetch(`/api/invoices?status=Submitted&approverId=${user.id}`),
+        fetch(`/api/invoices?status=Checked&approverId=${user.id}`),
+      ]);
+      const submitted = submittedRes.ok ? await submittedRes.json() : [];
+      const checked = checkedRes.ok ? await checkedRes.json() : [];
+      const data = [
+        ...checked,
+        ...submitted.filter((s: { id: string }) => !checked.some((c: { id: string }) => c.id === s.id)),
+      ];
       setInvoices(data);
     } catch {
       console.error("Failed to fetch pending invoices");
