@@ -13,7 +13,6 @@ const tabs = [
   { label: "Budget", href: "/budget" },
   { label: "Draws", href: "/draws" },
   { label: "Invoices", href: "/invoices" },
-  { label: "Bids", href: "/bids" },
   { label: "Milestones", href: "/milestones" },
   { label: "Notes", href: "/notes" },
   { label: "Distribution", href: "/distribution" },
