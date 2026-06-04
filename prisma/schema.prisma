@@ -136,10 +136,11 @@ model BudgetLineItem {
   id             String @id @default(cuid())
   categoryId     String
   description    String
-  originalBudget Float
-  revisedBudget  Float
-  committedCost  Float  @default(0)
-  actualCost     Float  @default(0)
+  originalBudget     Float
+  revisedBudget      Float
+  committedCost      Float   @default(0)
+  actualCost         Float   @default(0)
+  movedToContingency Boolean @default(false)
 
   category      BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   contracts     Contract[]

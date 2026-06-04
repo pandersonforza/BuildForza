@@ -16,7 +16,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { BudgetLineItemForm } from "@/components/budget/budget-line-item-form";
 import { BudgetCategoryForm } from "@/components/budget/budget-category-form";
 import { useToast } from "@/components/ui/toast";
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, ChevronsRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, ChevronsRight, CheckCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency, formatPercent } from "@/lib/utils";
@@ -413,12 +413,20 @@ export function BudgetTable({ projectId, categories, onMutate }: BudgetTableProp
                               return (
                                 <TableRow key={li.id} className="hover:bg-muted/30">
                                   <TableCell className="pl-16 text-muted-foreground">
-                                    <Link
-                                      href={`/projects/${projectId}/invoices?lineItem=${li.id}`}
-                                      className="hover:underline hover:text-foreground transition-colors"
-                                    >
-                                      {li.description}
-                                    </Link>
+                                    <div className="flex items-center gap-1.5">
+                                      {li.movedToContingency && (
+                                        <CheckCheck
+                                          className="h-3.5 w-3.5 shrink-0 text-teal-500"
+                                          title="Unused budget moved to Contingency"
+                                        />
+                                      )}
+                                      <Link
+                                        href={`/projects/${projectId}/invoices?lineItem=${li.id}`}
+                                        className="hover:underline hover:text-foreground transition-colors"
+                                      >
+                                        {li.description}
+                                      </Link>
+                                    </div>
                                   </TableCell>
                                   <TableCell className="text-right">{formatCurrency(li.originalBudget)}</TableCell>
                                   <TableCell className="text-right">{formatCurrency(li.revisedBudget)}</TableCell>

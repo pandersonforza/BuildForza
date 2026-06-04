@@ -47,11 +47,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Atomic swap: trim source to actual, credit contingency
+    // Atomic swap: trim source to actual, mark it, credit contingency
     await prisma.$transaction([
       prisma.budgetLineItem.update({
         where: { id: lineItemId },
-        data: { revisedBudget: source.actualCost },
+        data: { revisedBudget: source.actualCost, movedToContingency: true },
       }),
       prisma.budgetLineItem.update({
         where: { id: contingency.id },
