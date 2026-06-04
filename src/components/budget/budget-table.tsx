@@ -16,7 +16,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { BudgetLineItemForm } from "@/components/budget/budget-line-item-form";
 import { BudgetCategoryForm } from "@/components/budget/budget-category-form";
 import { useToast } from "@/components/ui/toast";
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, ChevronsRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency, formatPercent } from "@/lib/utils";
@@ -107,6 +107,8 @@ export function BudgetTable({ projectId, categories, onMutate }: BudgetTableProp
   const [editLineItem, setEditLineItem] = useState<BudgetLineItem | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<{ type: "category" | "lineItem"; id: string } | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [moveTarget, setMoveTarget] = useState<{ id: string; description: string; surplus: number } | null>(null);
+  const [moveOpen, setMoveOpen] = useState(false);
   const { toast } = useToast();
   const { user, canEdit } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -207,6 +209,33 @@ export function BudgetTable({ projectId, categories, onMutate }: BudgetTableProp
     if (next.has(group)) next.delete(group);
     else next.add(group);
     setExpandedGroups(next);
+  };
+
+  const handleMoveToContingency = async () => {
+    if (!moveTarget) return;
+    try {
+      const res = await fetch("/api/budget/move-to-contingency", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lineItemId: moveTarget.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to move");
+      }
+      const { moved } = await res.json();
+      toast({
+        title: "Moved to Contingency",
+        description: `${formatCurrency(moved)} moved from "${moveTarget.description}" to Contingency.`,
+      });
+      onMutate();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to move to contingency",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = async () => {
@@ -405,33 +434,49 @@ export function BudgetTable({ projectId, categories, onMutate }: BudgetTableProp
                                   </TableCell>
                                   <TableCell className="text-right">{formatPercent(pct)}</TableCell>
                                   <TableCell>
-                                    {canEdit && (
-                                      <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1">
+                                      {isAdmin && variance > 0 && !/contingency/i.test(li.description) && (
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-7 w-7"
+                                          className="h-7 w-7 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+                                          title={`Move ${formatCurrency(variance)} unused budget to Contingency`}
                                           onClick={() => {
-                                            setSelectedCategoryId(category.id);
-                                            setEditLineItem(li);
-                                            setLineItemFormOpen(true);
+                                            setMoveTarget({ id: li.id, description: li.description, surplus: variance });
+                                            setMoveOpen(true);
                                           }}
                                         >
-                                          <Pencil className="h-3 w-3" />
+                                          <ChevronsRight className="h-3 w-3" />
                                         </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => {
-                                            setDeleteTarget({ type: "lineItem", id: li.id });
-                                            setDeleteOpen(true);
-                                          }}
-                                        >
-                                          <Trash2 className="h-3 w-3 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    )}
+                                      )}
+                                      {canEdit && (
+                                        <>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => {
+                                              setSelectedCategoryId(category.id);
+                                              setEditLineItem(li);
+                                              setLineItemFormOpen(true);
+                                            }}
+                                          >
+                                            <Pencil className="h-3 w-3" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() => {
+                                              setDeleteTarget({ type: "lineItem", id: li.id });
+                                              setDeleteOpen(true);
+                                            }}
+                                          >
+                                            <Trash2 className="h-3 w-3 text-destructive" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
                                   </TableCell>
                                 </TableRow>
                               );
@@ -526,6 +571,19 @@ export function BudgetTable({ projectId, categories, onMutate }: BudgetTableProp
         }
         onConfirm={handleDelete}
         confirmLabel="Delete"
+      />
+
+      <ConfirmDialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        title="Move to Contingency"
+        description={
+          moveTarget
+            ? `Move ${formatCurrency(moveTarget.surplus)} of unused budget from "${moveTarget.description}" to Contingency? The line's revised budget will be reduced to its actual cost.`
+            : ""
+        }
+        onConfirm={handleMoveToContingency}
+        confirmLabel="Move"
       />
     </div>
   );
