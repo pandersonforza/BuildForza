@@ -96,6 +96,8 @@ export async function PUT(
         ...(body.holdEndDate !== undefined && { holdEndDate: body.holdEndDate ? new Date(body.holdEndDate) : null }),
         ...(body.completionNotes !== undefined && { completionNotes: body.completionNotes }),
         ...(body.teamBonused !== undefined && { teamBonused: body.teamBonused }),
+        ...(body.projectedTurnoverDate !== undefined && { projectedTurnoverDate: body.projectedTurnoverDate ? new Date(body.projectedTurnoverDate) : null }),
+        ...(body.actualTurnoverDate !== undefined && { actualTurnoverDate: body.actualTurnoverDate ? new Date(body.actualTurnoverDate) : null }),
       },
     });
 

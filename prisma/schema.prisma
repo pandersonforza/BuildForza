@@ -90,6 +90,10 @@ model Project {
   completionNotes  String?
   teamBonused      Boolean   @default(false)
 
+  // Turnover date tracking
+  projectedTurnoverDate DateTime?
+  actualTurnoverDate    DateTime?
+
   budgetCategories BudgetCategory[]
   contracts        Contract[]
   drawRequests     DrawRequest[]

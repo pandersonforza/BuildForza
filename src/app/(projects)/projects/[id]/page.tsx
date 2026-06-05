@@ -126,11 +126,143 @@ export default function ProjectDetailPage() {
 
       </div>
 
+      {/* Turnover Dates */}
+      <TurnoverDateCard project={project} onMutate={mutate} />
+
       {/* Track Record - only for Completed projects */}
       {project.status === "Completed" && (
         <TrackRecordCard project={project} onMutate={mutate} />
       )}
     </div>
+  );
+}
+
+function TurnoverDateCard({ project, onMutate }: { project: Record<string, unknown> & { id: string }; onMutate: () => void }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    projectedTurnoverDate: project.projectedTurnoverDate ? String(project.projectedTurnoverDate).split("T")[0] : "",
+    actualTurnoverDate: project.actualTurnoverDate ? String(project.actualTurnoverDate).split("T")[0] : "",
+  });
+
+  const isAdmin = user?.role === "admin";
+
+  const projected = project.projectedTurnoverDate ? new Date(project.projectedTurnoverDate as string) : null;
+  const actual = project.actualTurnoverDate ? new Date(project.actualTurnoverDate as string) : null;
+
+  const diffDays = projected && actual
+    ? Math.round((actual.getTime() - projected.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectedTurnoverDate: form.projectedTurnoverDate || null,
+          actualTurnoverDate: form.actualTurnoverDate || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      toast({ title: "Turnover dates saved" });
+      setEditing(false);
+      onMutate();
+    } catch {
+      toast({ title: "Error", description: "Failed to save turnover dates", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Turnover Date
+          {isAdmin && !editing && (
+            <Button variant="ghost" size="sm" onClick={() => {
+              setForm({
+                projectedTurnoverDate: project.projectedTurnoverDate ? String(project.projectedTurnoverDate).split("T")[0] : "",
+                actualTurnoverDate: project.actualTurnoverDate ? String(project.actualTurnoverDate).split("T")[0] : "",
+              });
+              setEditing(true);
+            }}>
+              <Pencil className="h-4 w-4 mr-1" />
+              {projected || actual ? "Edit" : "Add Dates"}
+            </Button>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {editing ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-turnover">Projected Turnover</Label>
+                <Input
+                  id="proj-turnover"
+                  type="date"
+                  value={form.projectedTurnoverDate}
+                  onChange={(e) => setForm((f) => ({ ...f, projectedTurnoverDate: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="actual-turnover">Actual Turnover</Label>
+                <Input
+                  id="actual-turnover"
+                  type="date"
+                  value={form.actualTurnoverDate}
+                  onChange={(e) => setForm((f) => ({ ...f, actualTurnoverDate: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? "Saving…" : "Save"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Projected</p>
+              <p className="font-semibold text-sm">
+                {projected ? projected.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Actual</p>
+              <p className="font-semibold text-sm">
+                {actual ? actual.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Variance</p>
+              {diffDays === null ? (
+                <p className="text-sm text-muted-foreground">—</p>
+              ) : diffDays === 0 ? (
+                <p className="font-semibold text-sm text-emerald-400">On time</p>
+              ) : diffDays < 0 ? (
+                <p className="font-semibold text-sm text-emerald-400">
+                  {Math.abs(diffDays)} day{Math.abs(diffDays) !== 1 ? "s" : ""} early
+                </p>
+              ) : (
+                <p className="font-semibold text-sm text-amber-400">
+                  {diffDays} day{diffDays !== 1 ? "s" : ""} late
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
