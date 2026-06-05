@@ -138,7 +138,6 @@ export default function ProjectDetailPage() {
 }
 
 function TurnoverDateCard({ project, onMutate }: { project: Record<string, unknown> & { id: string }; onMutate: () => void }) {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -146,8 +145,6 @@ function TurnoverDateCard({ project, onMutate }: { project: Record<string, unkno
     projectedTurnoverDate: project.projectedTurnoverDate ? String(project.projectedTurnoverDate).split("T")[0] : "",
     actualTurnoverDate: project.actualTurnoverDate ? String(project.actualTurnoverDate).split("T")[0] : "",
   });
-
-  const isAdmin = user?.role === "admin";
 
   const projected = project.projectedTurnoverDate ? new Date(project.projectedTurnoverDate as string) : null;
   const actual = project.actualTurnoverDate ? new Date(project.actualTurnoverDate as string) : null;
@@ -183,7 +180,7 @@ function TurnoverDateCard({ project, onMutate }: { project: Record<string, unkno
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Turnover Date
-          {isAdmin && !editing && (
+          {!editing && (
             <Button variant="ghost" size="sm" onClick={() => {
               setForm({
                 projectedTurnoverDate: project.projectedTurnoverDate ? String(project.projectedTurnoverDate).split("T")[0] : "",
