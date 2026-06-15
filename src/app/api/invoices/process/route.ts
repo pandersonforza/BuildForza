@@ -165,7 +165,7 @@ Guidelines:
     // the ephemeral cache_control on the system prompt.
     const response = await anthropic.beta.messages.create({
       betas: ['pdfs-2024-09-25', 'prompt-caching-2024-07-31'],
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
       system: [
         {
