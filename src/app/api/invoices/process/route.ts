@@ -54,27 +54,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only fetch active projects to keep context small
+    // Only fetch active projects — omit line items to keep the prompt under the 200k token limit
     const projects = await prisma.project.findMany({
       where: { status: 'Active' },
       select: {
         id: true,
         name: true,
-        budgetCategories: {
-          select: {
-            id: true,
-            name: true,
-            lineItems: {
-              select: { id: true, description: true },
-              take: 30,
-            },
-          },
-        },
+        address: true,
       },
-    });
-
-    const vendors = await prisma.vendor.findMany({
-      select: { id: true, name: true, company: true, category: true },
     });
 
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -86,12 +73,7 @@ export async function POST(request: NextRequest) {
         date: new Date().toISOString().split('T')[0],
         description: 'Construction materials and supplies',
         suggestedProjectId: projects.length > 0 ? projects[0].id : null,
-        suggestedBudgetLineItemId:
-          projects.length > 0 &&
-          projects[0].budgetCategories.length > 0 &&
-          projects[0].budgetCategories[0].lineItems.length > 0
-            ? projects[0].budgetCategories[0].lineItems[0].id
-            : null,
+        suggestedBudgetLineItemId: null,
         confidence: 0.45,
         reasoning: 'Mock response — ANTHROPIC_API_KEY not configured. Set the environment variable to enable AI-powered invoice processing.',
       };
@@ -103,32 +85,14 @@ export async function POST(request: NextRequest) {
     const base64Pdf = pdfBuffer.toString('base64');
 
     const projectContext = projects
-      .map((p) => {
-        const categories = p.budgetCategories
-          .map((cat) => {
-            const items = cat.lineItems
-              .map((li) => `      - LineItem ID: "${li.id}" | Name: "${li.description}"`)
-              .join('\n');
-            return `    Category: "${cat.name}" (ID: "${cat.id}")\n${items}`;
-          })
-          .join('\n');
-        return `  Project: "${p.name}" (ID: "${p.id}")\n${categories}`;
-      })
-      .join('\n\n');
-
-    const vendorContext = vendors
-      .map((v) => `  - "${v.name}" (Company: "${v.company}", Category: "${v.category}")`)
+      .map((p) => `  - ID: "${p.id}" | Name: "${p.name}"${p.address ? ` | Address: "${p.address}"` : ''}`)
       .join('\n');
 
     const systemPrompt = `You are an expert invoice processing assistant for a real estate development company. Your job is to analyze invoice PDFs and extract structured data.
 
-Here are the available projects and their budget line items:
+Here are the active projects (match by name or address if the invoice references one):
 
-${projectContext || '  (No projects available)'}
-
-Here are the known vendors:
-
-${vendorContext || '  (No vendors available)'}
+${projectContext || '  (No active projects)'}
 
 Analyze the provided PDF. It may contain ONE or MULTIPLE invoices. Carefully check for page breaks, different vendor names, different invoice numbers, or other indicators that separate invoices exist within the document.
 
@@ -144,18 +108,17 @@ Required JSON structure — ALWAYS return an object with an "invoices" array, ev
       "date": "string - invoice date in YYYY-MM-DD format",
       "description": "string - brief description of goods/services",
       "suggestedProjectId": "string or null - the ID of the best matching project from the list above",
-      "suggestedBudgetLineItemId": "string or null - the ID of the best matching budget line item from the list above",
-      "confidence": number between 0 and 1 - how confident you are in the project/line item match,
-      "reasoning": "string - brief explanation of why you chose this project and line item"
+      "suggestedBudgetLineItemId": null,
+      "confidence": number between 0 and 1 - how confident you are in the project match,
+      "reasoning": "string - brief explanation of your project match (or why no match)"
     }
   ]
 }
 
 Guidelines:
 - If the PDF contains multiple invoices (different vendors, invoice numbers, or clearly separated sections), extract EACH one as a separate entry in the array.
-- Match vendors to known vendors when possible (fuzzy matching on name/company).
-- Match to projects and line items based on the description, vendor category, and amount.
-- If no good match exists, set suggestedProjectId and suggestedBudgetLineItemId to null with low confidence.
+- Match to a project if the invoice references a job site address, project name, or other identifiable detail.
+- If no project match exists, set suggestedProjectId to null with low confidence.
 - Always extract vendorName, amount, and date even if you cannot match to a project.
 - For the date, use the invoice date (not due date or payment date).
 - For the amount, use the total amount due (including tax if shown).`;
