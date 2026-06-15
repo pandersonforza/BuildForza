@@ -162,7 +162,7 @@ Guidelines:
 - For the amount, use the total amount due (including tax if shown).`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 1500,
       system: [
         {
@@ -191,10 +191,12 @@ Guidelines:
           ],
         },
       ],
-    } as Parameters<typeof anthropic.messages.create>[0]) as Awaited<ReturnType<typeof anthropic.messages.create>> & { content: Array<{ type: string; text?: string }> };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any) as any;
 
-    const textBlock = response.content.find((block: { type: string }) => block.type === 'text') as { type: 'text'; text: string } | undefined;
-    if (!textBlock || textBlock.type !== 'text') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const textBlock = response.content.find((block: any) => block.type === 'text') as { type: 'text'; text: string } | undefined;
+    if (!textBlock) {
       return NextResponse.json(
         { error: 'No text response received from AI' },
         { status: 502 }
@@ -246,10 +248,13 @@ Guidelines:
     return NextResponse.json({ invoices });
   } catch (error) {
     console.error('Failed to process invoice:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    // Surface the actual error message so the UI can show it (instead of silent blank fields)
+    const message = error instanceof Error ? error.message : String(error);
+    // Include status if it looks like an API error with a status field
+    const statusCode = (error as { status?: number })?.status;
     return NextResponse.json(
-      { error: `Failed to process invoice: ${message}` },
-      { status: 500 }
+      { error: `AI processing failed: ${message}` },
+      { status: statusCode && statusCode >= 400 && statusCode < 600 ? statusCode : 500 }
     );
   }
 }

@@ -308,19 +308,25 @@ export function InvoiceUpload({
               body: JSON.stringify({ filePath: blob.url }),
             });
 
-            if (!processRes.ok) throw new Error("AI processing failed");
-
             const raw = await processRes.json();
-            invoices = (raw.invoices || [raw]).map((inv: Record<string, unknown>) => ({
-              ...inv,
-              suggestedLineItemId: inv.suggestedLineItemId || inv.suggestedBudgetLineItemId || null,
-            }));
 
-            // AI returned a valid response but found no invoices — still push through
-            if (invoices.length === 0) invoices = [emptyFallback];
-          } catch {
-            // Network error or non-200 — push through with blank fields
-            invoices = [emptyFallback];
+            if (!processRes.ok) {
+              // Surface the server-side error in the reasoning field
+              const errMsg = raw?.error || "AI processing failed — please fill in the fields manually.";
+              invoices = [{ ...emptyFallback, reasoning: errMsg }];
+            } else {
+              invoices = (raw.invoices || [raw]).map((inv: Record<string, unknown>) => ({
+                ...inv,
+                suggestedLineItemId: inv.suggestedLineItemId || inv.suggestedBudgetLineItemId || null,
+              }));
+
+              // AI returned a valid response but found no invoices — still push through
+              if (invoices.length === 0) invoices = [emptyFallback];
+            }
+          } catch (fetchErr) {
+            // Network error — push through with blank fields
+            const msg = fetchErr instanceof Error ? fetchErr.message : "Network error during AI processing.";
+            invoices = [{ ...emptyFallback, reasoning: `AI processing error: ${msg}` }];
           }
 
           setProcessingProgress((prev) => prev + 1);
