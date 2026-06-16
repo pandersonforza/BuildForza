@@ -36,6 +36,9 @@ export function ProjectDetailHeader({ project, budgetSummary, onMutate }: Projec
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold">{project.name}</h1>
+            {project.tenant && (
+              <p className="text-sm text-muted-foreground mt-0.5">{project.tenant}</p>
+            )}
             <div className="flex items-center gap-2 mt-1 text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <a
