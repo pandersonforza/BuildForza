@@ -97,7 +97,7 @@ export function ProjectSummaryTable({
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Address</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Tenant</TableHead>
               <TableHead>Stage</TableHead>
               <TableHead>Budget</TableHead>
               <TableHead>Status</TableHead>
