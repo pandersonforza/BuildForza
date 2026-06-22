@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       milestoneIds: string[];
       vendorName: string;
       date: string;
+      remitTo?: string;
       approverId?: string;
       submitForApproval?: boolean;
     };
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
       projectAddress: project?.address ?? '',
       milestones: milestones.map((m) => ({ name: m.name, devFee: m.devFee })),
       approverName,
+      remitTo: body.remitTo ?? null,
     });
 
     const invoice = await prisma.invoice.create({

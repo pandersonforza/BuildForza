@@ -62,6 +62,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
   const [invoiceVendorName, setInvoiceVendorName] = useState("Forza Development");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
   const [invoiceApproverId, setInvoiceApproverId] = useState("");
+  const [invoiceRemitTo, setInvoiceRemitTo] = useState("");
   const [invoiceUsers, setInvoiceUsers] = useState<{ id: string; name: string }[]>([]);
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -121,6 +122,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
           milestoneIds: Array.from(selectedIds),
           vendorName: invoiceVendorName,
           date: invoiceDate,
+          remitTo: invoiceRemitTo.trim() || undefined,
           approverId: invoiceApproverId || undefined,
           submitForApproval,
         }),
@@ -667,13 +669,23 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Billed By</Label>
-              <Input
-                value={invoiceVendorName}
-                onChange={(e) => setInvoiceVendorName(e.target.value)}
-                placeholder="Company name"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Billed By</Label>
+                <Input
+                  value={invoiceVendorName}
+                  onChange={(e) => setInvoiceVendorName(e.target.value)}
+                  placeholder="Company name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Remit To</Label>
+                <Input
+                  value={invoiceRemitTo}
+                  onChange={(e) => setInvoiceRemitTo(e.target.value)}
+                  placeholder="Payment address or instructions"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

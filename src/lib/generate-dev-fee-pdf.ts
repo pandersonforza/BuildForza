@@ -41,6 +41,7 @@ interface PdfMeta {
   projectAddress: string;
   milestones: { name: string; devFee: number }[];
   approverName: string | null;
+  remitTo: string | null;
 }
 
 export async function generateDevFeePdf(invoice: DevFeeInvoiceData): Promise<Buffer> {
@@ -109,6 +110,12 @@ export async function generateDevFeePdf(invoice: DevFeeInvoiceData): Promise<Buf
   draw('Billed By:', margin, y, { bold: true });
   draw(invoice.vendorName, margin + 120, y);
   y -= lh;
+
+  if (meta?.remitTo) {
+    draw('Remit To:', margin, y, { bold: true });
+    draw(meta.remitTo, margin + 120, y);
+    y -= lh;
+  }
 
   draw('Project:', margin, y, { bold: true });
   draw(projectName, margin + 120, y);
