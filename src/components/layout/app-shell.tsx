@@ -10,7 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const pathname = usePathname();
 
-  if (pathname === "/login" || pathname === "/register" || pathname.startsWith("/bid")) {
+  if (pathname === "/" || pathname === "/login" || pathname === "/register" || pathname.startsWith("/bid")) {
     return <>{children}</>;
   }
 
