@@ -6,6 +6,15 @@ const PUBLIC_PATHS = ["/login", "/register", "/bid", "/api/auth", "/api/bids", "
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Landing page is public, but logged-in users go straight to the dashboard
+  if (pathname === "/") {
+    const token = getSessionTokenFromCookie(request.headers.get("cookie"));
+    if (token) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.next();
+  }
+
   // Allow public paths without auth
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
