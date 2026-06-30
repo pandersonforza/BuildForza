@@ -69,15 +69,21 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Create new categories with line items, restoring any prior actualCost
+      // Create new categories with line items, restoring any prior actualCost.
+      // Skip line items where both budget amounts are zero.
       for (const cat of categories) {
+        const lineItems = cat.lineItems.filter(
+          (li) => li.originalBudget !== 0 || li.revisedBudget !== 0
+        );
+        if (lineItems.length === 0) continue;
+
         await tx.budgetCategory.create({
           data: {
             projectId,
             name: cat.name,
             categoryGroup: cat.categoryGroup,
             lineItems: {
-              create: cat.lineItems.map((li) => ({
+              create: lineItems.map((li) => ({
                 description: li.description,
                 originalBudget: li.originalBudget,
                 revisedBudget: li.revisedBudget,
