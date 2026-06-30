@@ -116,7 +116,7 @@ Required JSON structure:
   "categories": [
     {
       "name": "string - subcategory name (e.g. Building Costs, Design Fees, Loan Fees)",
-      "categoryGroup": "string - MUST be one of: Hard Costs, Soft Costs, Financing, Land",
+      "categoryGroup": "string - MUST be one of: Land, Soft Costs, Hard Costs, Outside Costs, Financing Costs",
       "lineItems": [
         {
           "description": "string - line item description",
@@ -130,7 +130,7 @@ Required JSON structure:
 }`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 16000,
       messages: [
         {
