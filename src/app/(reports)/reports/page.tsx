@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select";
 import { PROJECT_GROUPS, PROJECT_STATUSES } from "@/lib/constants";
 import { exportReportToExcel, type ProjectCostRow } from "@/lib/reports-export";
 
@@ -89,29 +89,25 @@ export default function ReportsPage() {
           />
         </div>
 
-        <Select value={group} onValueChange={setGroup}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Group" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Groups</SelectItem>
-            {PROJECT_GROUPS.map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectNative
+          value={group}
+          onChange={(e) => setGroup(e.target.value)}
+          className="w-36"
+          options={[
+            { value: "All", label: "All Groups" },
+            ...PROJECT_GROUPS.map((g) => ({ value: g, label: g })),
+          ]}
+        />
 
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Statuses</SelectItem>
-            {PROJECT_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectNative
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="w-36"
+          options={[
+            { value: "All", label: "All Statuses" },
+            ...PROJECT_STATUSES.map((s) => ({ value: s, label: s })),
+          ]}
+        />
 
         <span className="text-sm text-muted-foreground ml-auto">
           {rows.length} project{rows.length !== 1 ? "s" : ""}
