@@ -20,10 +20,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/projects", label: "Projects" },
-
   { href: "/invoices", label: "Invoices" },
   { href: "/milestones", label: "Milestones" },
   { href: "/track-record", label: "Track Record" },
+  { href: "/reports", label: "Reports" },
   { href: "/admin/users", label: "Users", adminOnly: true },
 ];
 
