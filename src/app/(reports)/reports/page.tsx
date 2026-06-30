@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import useSWR from "swr";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
 import { PROJECT_GROUPS, PROJECT_STATUSES } from "@/lib/constants";
 import { exportReportToExcel, type ProjectCostRow } from "@/lib/reports-export";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
@@ -20,25 +17,30 @@ export default function ReportsPage() {
   const [status, setStatus] = useState("All");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [rows, setRows] = useState<ProjectCostRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const debounce = useCallback((val: string) => {
+  const handleSearchChange = useCallback((val: string) => {
     setSearch(val);
-    const t = setTimeout(() => setDebouncedSearch(val), 300);
-    return () => clearTimeout(t);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(val), 300);
   }, []);
 
-  const params = new URLSearchParams();
-  if (group !== "All") params.set("group", group);
-  if (status !== "All") params.set("status", status);
-  if (debouncedSearch) params.set("search", debouncedSearch);
-  const queryString = params.toString();
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (group !== "All") params.set("group", group);
+    if (status !== "All") params.set("status", status);
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    const qs = params.toString();
 
-  const { data, isLoading } = useSWR<ProjectCostRow[]>(
-    `/api/reports/costs${queryString ? `?${queryString}` : ""}`,
-    fetcher
-  );
-
-  const rows = data ?? [];
+    setIsLoading(true);
+    fetch(`/api/reports/costs${qs ? `?${qs}` : ""}`)
+      .then((r) => r.json())
+      .then((data) => setRows(Array.isArray(data) ? data : []))
+      .catch(() => setRows([]))
+      .finally(() => setIsLoading(false));
+  }, [group, status, debouncedSearch]);
 
   const totals = rows.reduce(
     (acc, r) => ({
@@ -84,7 +86,7 @@ export default function ReportsPage() {
           <Input
             placeholder="Search projects..."
             value={search}
-            onChange={(e) => debounce(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-8 w-56"
           />
         </div>
