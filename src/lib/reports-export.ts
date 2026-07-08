@@ -15,13 +15,9 @@ export interface ProjectCostRow {
   paidInvoices: number;
 }
 
-const HEADERS = [
-  "Project", "Address", "Tenant", "Group", "Status", "Stage",
-  "Original Budget", "Revised Budget", "Actual Cost TD",
-  "Committed Cost", "Variance", "Total Invoices", "Paid Invoices",
-];
+const HEADERS = ["Project", "Address", "Revised Budget", "Variance", "Paid Invoices"];
 const COL_COUNT = HEADERS.length;
-const CURRENCY_COLS = [6, 7, 8, 9, 10, 11, 12];
+const CURRENCY_COLS = [2, 3, 4];
 
 export async function exportReportToExcel(
   rows: ProjectCostRow[],
@@ -55,33 +51,15 @@ export async function exportReportToExcel(
 
   // Data rows
   for (const r of rows) {
-    aoa.push([
-      r.name,
-      r.address ?? "",
-      r.tenant ?? "",
-      r.projectGroup ?? "",
-      r.status,
-      r.stage ?? "",
-      r.originalBudget,
-      r.revisedBudget,
-      r.actualCost,
-      r.committedCost,
-      r.variance,
-      r.totalInvoices,
-      r.paidInvoices,
-    ]);
+    aoa.push([r.name, r.address ?? "", r.revisedBudget, r.variance, r.paidInvoices]);
   }
 
   // Totals row
   aoa.push([
     `TOTAL (${rows.length} project${rows.length === 1 ? "" : "s"})`,
-    "", "", "", "", "",
-    rows.reduce((s, r) => s + r.originalBudget, 0),
+    "",
     rows.reduce((s, r) => s + r.revisedBudget, 0),
-    rows.reduce((s, r) => s + r.actualCost, 0),
-    rows.reduce((s, r) => s + r.committedCost, 0),
     rows.reduce((s, r) => s + r.variance, 0),
-    rows.reduce((s, r) => s + r.totalInvoices, 0),
     rows.reduce((s, r) => s + r.paidInvoices, 0),
   ]);
 
@@ -113,17 +91,9 @@ export async function exportReportToExcel(
   // Column widths
   ws["!cols"] = [
     { wch: 30 }, // Project
-    { wch: 28 }, // Address
-    { wch: 18 }, // Tenant
-    { wch: 10 }, // Group
-    { wch: 12 }, // Status
-    { wch: 16 }, // Stage
-    { wch: 18 }, // Original Budget
+    { wch: 32 }, // Address
     { wch: 18 }, // Revised Budget
-    { wch: 18 }, // Actual Cost TD
-    { wch: 18 }, // Committed Cost
     { wch: 15 }, // Variance
-    { wch: 16 }, // Total Invoices
     { wch: 15 }, // Paid Invoices
   ];
 
