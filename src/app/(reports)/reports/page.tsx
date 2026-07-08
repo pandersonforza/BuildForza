@@ -127,7 +127,7 @@ export default function ReportsPage() {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Address</th>
               <th className="text-right px-4 py-3 font-medium text-muted-foreground">Current Budget</th>
               <th className="text-right px-4 py-3 font-medium text-muted-foreground">Paid Invoices</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Variance</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Remaining</th>
             </tr>
           </thead>
           <tbody>

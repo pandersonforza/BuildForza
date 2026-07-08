@@ -15,7 +15,7 @@ export interface ProjectCostRow {
   paidInvoices: number;
 }
 
-const HEADERS = ["Project", "Address", "Current Budget", "Paid Invoices", "Variance"];
+const HEADERS = ["Project", "Address", "Current Budget", "Paid Invoices", "Remaining"];
 const COL_COUNT = HEADERS.length;
 const CURRENCY_COLS = [2, 3, 4];
 
@@ -93,7 +93,7 @@ export async function exportReportToExcel(
     { wch: 30 }, // Project
     { wch: 32 }, // Address
     { wch: 18 }, // Revised Budget
-    { wch: 15 }, // Variance
+    { wch: 15 }, // Remaining
     { wch: 15 }, // Paid Invoices
   ];
 
