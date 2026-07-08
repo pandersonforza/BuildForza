@@ -125,9 +125,9 @@ export default function ReportsPage() {
             <tr className="border-b border-border bg-card">
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Project</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Address</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Revised Budget</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Variance</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Current Budget</th>
               <th className="text-right px-4 py-3 font-medium text-muted-foreground">Paid Invoices</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Variance</th>
             </tr>
           </thead>
           <tbody>
@@ -150,10 +150,10 @@ export default function ReportsPage() {
                 <td className="px-4 py-3 font-medium">{r.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.address ?? "—"}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{fmt(r.revisedBudget)}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{fmt(r.paidInvoices)}</td>
                 <td className={`px-4 py-3 text-right tabular-nums ${r.variance < 0 ? "text-red-400" : "text-emerald-400"}`}>
                   {fmt(r.variance)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">{fmt(r.paidInvoices)}</td>
               </tr>
             ))}
           </tbody>
@@ -162,10 +162,10 @@ export default function ReportsPage() {
               <tr className="border-t-2 border-border bg-card font-semibold">
                 <td className="px-4 py-3" colSpan={2}>Total ({rows.length} projects)</td>
                 <td className="px-4 py-3 text-right tabular-nums">{fmt(totals.revisedBudget)}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{fmt(totals.paidInvoices)}</td>
                 <td className={`px-4 py-3 text-right tabular-nums ${totals.variance < 0 ? "text-red-400" : "text-emerald-400"}`}>
                   {fmt(totals.variance)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">{fmt(totals.paidInvoices)}</td>
               </tr>
             </tfoot>
           )}

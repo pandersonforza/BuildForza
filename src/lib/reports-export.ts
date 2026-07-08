@@ -15,7 +15,7 @@ export interface ProjectCostRow {
   paidInvoices: number;
 }
 
-const HEADERS = ["Project", "Address", "Revised Budget", "Variance", "Paid Invoices"];
+const HEADERS = ["Project", "Address", "Current Budget", "Paid Invoices", "Variance"];
 const COL_COUNT = HEADERS.length;
 const CURRENCY_COLS = [2, 3, 4];
 
@@ -51,7 +51,7 @@ export async function exportReportToExcel(
 
   // Data rows
   for (const r of rows) {
-    aoa.push([r.name, r.address ?? "", r.revisedBudget, r.variance, r.paidInvoices]);
+    aoa.push([r.name, r.address ?? "", r.revisedBudget, r.paidInvoices, r.variance]);
   }
 
   // Totals row
@@ -59,8 +59,8 @@ export async function exportReportToExcel(
     `TOTAL (${rows.length} project${rows.length === 1 ? "" : "s"})`,
     "",
     rows.reduce((s, r) => s + r.revisedBudget, 0),
-    rows.reduce((s, r) => s + r.variance, 0),
     rows.reduce((s, r) => s + r.paidInvoices, 0),
+    rows.reduce((s, r) => s + r.variance, 0),
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
