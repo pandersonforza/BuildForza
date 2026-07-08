@@ -3,9 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  'Pending Review': ['Submitted'],                      // backward compat
-  'Submitted': ['Checked', 'Rejected'],
-  'Checked': ['Approved', 'Rejected', 'Submitted'],     // Submitted = return to submitter
+  'Submitted': ['Approved', 'Rejected'],
   'Approved': ['Paid'],
 };
 
@@ -85,68 +83,8 @@ export async function PUT(
         );
       }
 
-      // Pending Review → Submitted
-      if (currentStatus === 'Pending Review' && newStatus === 'Submitted') {
-        const approver = body.approver ?? existing.approver;
-        const projectId = body.projectId ?? existing.projectId;
-        const budgetLineItemId = body.budgetLineItemId ?? existing.budgetLineItemId;
-
-        if (!approver) {
-          return NextResponse.json(
-            { error: 'Approver must be set before submitting' },
-            { status: 400 }
-          );
-        }
-        if (!projectId) {
-          return NextResponse.json(
-            { error: 'Project must be assigned before submitting' },
-            { status: 400 }
-          );
-        }
-        // Pay app invoices don't need a single budget line item — they distribute across multiple
-        const isPayApp = existing.aiNotes?.includes('__payAppLineItems__');
-        if (!budgetLineItemId && !isPayApp) {
-          return NextResponse.json(
-            { error: 'Budget line item must be assigned before submitting' },
-            { status: 400 }
-          );
-        }
-
-        const invoice = await prisma.invoice.update({
-          where: { id },
-          data: {
-            status: 'Submitted',
-            submittedDate: new Date(),
-            approver,
-            projectId,
-            budgetLineItemId,
-            ...(body.submittedBy !== undefined && { submittedBy: body.submittedBy }),
-          },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
-        });
-
-        return NextResponse.json(invoice);
-      }
-
-      // Submitted → Checked (data verified, ready for approval meeting)
-      if (currentStatus === 'Submitted' && newStatus === 'Checked') {
-        const invoice = await prisma.invoice.update({
-          where: { id },
-          data: { status: 'Checked' },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
-        });
-
-        return NextResponse.json(invoice);
-      }
-
-      // Checked → Approved (with optional field edits, triggers budget increment)
-      if (currentStatus === 'Checked' && newStatus === 'Approved') {
+      // Submitted → Approved (with optional field edits, triggers budget increment)
+      if (currentStatus === 'Submitted' && newStatus === 'Approved') {
         const finalAmount = body.amount !== undefined ? body.amount : existing.amount;
         const finalLineItemId = body.budgetLineItemId !== undefined ? body.budgetLineItemId : existing.budgetLineItemId;
 
@@ -237,8 +175,8 @@ export async function PUT(
         return NextResponse.json(invoice);
       }
 
-      // Submitted → Rejected  /  Checked → Rejected
-      if (newStatus === 'Rejected' && (currentStatus === 'Submitted' || currentStatus === 'Checked')) {
+      // Submitted → Rejected
+      if (newStatus === 'Rejected' && currentStatus === 'Submitted') {
         const invoice = await prisma.invoice.update({
           where: { id },
           data: {
@@ -255,39 +193,6 @@ export async function PUT(
         return NextResponse.json(invoice);
       }
 
-      // Checked → Submitted (returned to submitter for revision)
-      if (currentStatus === 'Checked' && newStatus === 'Submitted') {
-        const invoice = await prisma.invoice.update({
-          where: { id },
-          data: {
-            status: 'Submitted',
-            ...(body.rejectionReason !== undefined && { rejectionReason: body.rejectionReason }),
-          },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
-        });
-
-        return NextResponse.json(invoice);
-      }
-
-      // Submitted → Pending Review (backward compat: returned legacy invoices)
-      if (currentStatus === 'Submitted' && newStatus === 'Pending Review') {
-        const invoice = await prisma.invoice.update({
-          where: { id },
-          data: {
-            status: 'Pending Review',
-            ...(body.rejectionReason !== undefined && { rejectionReason: body.rejectionReason }),
-          },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
-        });
-
-        return NextResponse.json(invoice);
-      }
     }
 
     // Allow drawRequestId updates regardless of status (for linking/unlinking from draws)
@@ -303,8 +208,8 @@ export async function PUT(
       return NextResponse.json(invoice);
     }
 
-    // Regular field updates — only allowed in "Pending Review" or "Submitted" status
-    if (existing.status !== 'Pending Review' && existing.status !== 'Submitted') {
+    // Regular field updates — only allowed in "Submitted" status
+    if (existing.status !== 'Submitted') {
       return NextResponse.json(
         { error: `Cannot update invoice fields when status is "${existing.status}". Only draft invoices can be edited.` },
         { status: 400 }

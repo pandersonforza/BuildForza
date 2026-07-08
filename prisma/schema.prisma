@@ -250,7 +250,7 @@ model Invoice {
   date             DateTime
   description      String?
   filePath         String?
-  status           String    @default("Pending Review")
+  status           String    @default("Submitted")
   submittedBy      String?
   approver         String?
   approverId       String?

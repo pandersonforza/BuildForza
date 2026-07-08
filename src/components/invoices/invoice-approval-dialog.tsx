@@ -52,8 +52,8 @@ export function InvoiceApprovalDialog({
   const [projects, setProjects] = useState<{ id: string; name: string; address: string }[]>([]);
   const [lineItems, setLineItems] = useState<{ id: string; description: string; category: { name: string } }[]>([]);
   const [loadingLineItems, setLoadingLineItems] = useState(false);
-  const [showReturnInput, setShowReturnInput] = useState(false);
-  const [returnReason, setReturnReason] = useState("");
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [duplicates, setDuplicates] = useState<{ id: string; invoiceNumber: string | null; amount: number; status: string; project: { name: string } | null }[]>([]);
   const { toast } = useToast();
@@ -69,8 +69,8 @@ export function InvoiceApprovalDialog({
     });
     setSelectedProjectId(invoice.project?.id || "");
     setSelectedLineItemId(invoice.lineItem?.id || "");
-    setShowReturnInput(false);
-    setReturnReason("");
+    setShowRejectInput(false);
+    setRejectReason("");
     setDuplicates([]);
     // Fetch projects and check for duplicates in parallel
     fetch("/api/projects")
@@ -114,8 +114,8 @@ export function InvoiceApprovalDialog({
 
   const handleClose = () => {
     onOpenChange(false);
-    setShowReturnInput(false);
-    setReturnReason("");
+    setShowRejectInput(false);
+    setRejectReason("");
     setLineItems([]);
     setDuplicates([]);
   };
@@ -151,7 +151,7 @@ export function InvoiceApprovalDialog({
     }
   };
 
-  const handleReturn = async () => {
+  const handleReject = async () => {
     if (!invoice) return;
     setActionLoading(true);
     try {
@@ -159,19 +159,19 @@ export function InvoiceApprovalDialog({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "Submitted",
-          rejectionReason: returnReason.trim() || null,
+          status: "Rejected",
+          rejectionReason: rejectReason.trim() || null,
         }),
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to return");
+        throw new Error(err.error || "Failed to reject");
       }
-      toast({ title: "Invoice Returned", description: `Invoice sent back to submitter for revision.` });
+      toast({ title: "Invoice Rejected", description: `Invoice has been rejected.` });
       handleClose();
       onSuccess();
     } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to return invoice", variant: "destructive" });
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to reject invoice", variant: "destructive" });
     } finally {
       setActionLoading(false);
     }
@@ -199,7 +199,7 @@ export function InvoiceApprovalDialog({
         <DialogHeader>
           <DialogTitle>Review {isPayApp ? "Pay Application" : "Invoice"}</DialogTitle>
           <DialogDescription>
-            Review the details below and approve or return to the submitter.
+            Review the details below and approve or reject.
           </DialogDescription>
         </DialogHeader>
 
@@ -321,15 +321,15 @@ export function InvoiceApprovalDialog({
               )}
             </div>
 
-            {/* Return reason — shown only when returning */}
-            {showReturnInput && (
+            {/* Rejection reason — shown only when rejecting */}
+            {showRejectInput && (
               <div className="space-y-1.5 border-t border-border pt-3">
-                <Label htmlFor="iad-return-reason">Reason for returning (optional)</Label>
+                <Label htmlFor="iad-reject-reason">Reason for rejection (optional)</Label>
                 <Textarea
-                  id="iad-return-reason"
-                  value={returnReason}
-                  onChange={(e) => setReturnReason(e.target.value)}
-                  placeholder="Explain what needs to be corrected..."
+                  id="iad-reject-reason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Explain why this invoice is being rejected..."
                   rows={2}
                 />
               </div>
@@ -345,22 +345,22 @@ export function InvoiceApprovalDialog({
             </a>
           )}
           <Button variant="outline" onClick={handleClose} disabled={actionLoading}>Cancel</Button>
-          {!showReturnInput ? (
+          {!showRejectInput ? (
             <Button
               variant="outline"
               className="border-destructive text-destructive hover:bg-destructive/10"
-              onClick={() => setShowReturnInput(true)}
+              onClick={() => setShowRejectInput(true)}
               disabled={actionLoading}
             >
-              Return to Submitter
+              Reject
             </Button>
           ) : (
             <Button
               variant="destructive"
-              onClick={handleReturn}
+              onClick={handleReject}
               disabled={actionLoading}
             >
-              {actionLoading ? "Returning..." : "Confirm Return"}
+              {actionLoading ? "Rejecting..." : "Confirm Reject"}
             </Button>
           )}
           <Button

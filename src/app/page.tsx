@@ -165,7 +165,7 @@ function BudgetMockup() {
 
 function InvoicesMockup() {
   const invoices = [
-    { vendor: "Apex Concrete LLC", number: "INV-2847", amount: "$48,200", date: "Jun 12", status: "Checked", project: "Riverside Commons" },
+    { vendor: "Apex Concrete LLC", number: "INV-2847", amount: "$48,200", date: "Jun 12", status: "Submitted", project: "Riverside Commons" },
     { vendor: "Meridian Electrical", number: "INV-1093", amount: "$12,750", date: "Jun 10", status: "Approved", project: "Summit Ridge Plaza" },
     { vendor: "PacWest Framing", number: "INV-0441", amount: "$87,500", date: "Jun 8", status: "Submitted", project: "Riverside Commons" },
     { vendor: "Design Studio Co.", number: "INV-3310", amount: "$9,400", date: "Jun 5", status: "Paid", project: "Meridian Office Park" },
@@ -175,7 +175,7 @@ function InvoicesMockup() {
     <MockWindow title="PropHound — Invoices">
       <div className="p-4">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          {["All", "Submitted", "Checked", "Approved", "Paid"].map((f, i) => (
+          {["All", "Submitted", "Approved", "Paid"].map((f, i) => (
             <div key={f} className={`px-3 py-1 rounded-full text-[11px] font-medium cursor-pointer ${i === 0 ? "bg-[#2a9a9a] text-white" : "bg-[#1a2029] text-[#8899a6]"}`}>{f}</div>
           ))}
         </div>
