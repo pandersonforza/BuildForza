@@ -8,7 +8,6 @@ import { SelectNative } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Trash2, FileDown, ChevronRight, Upload } from "lucide-react";
-import * as XLSX from "xlsx";
 import { downloadDistributionPDF } from "./distribution-pdf";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -224,8 +223,9 @@ export function DistributionSheet({ projectId }: { projectId: string }) {
     e.target.value = ""; // reset so same file can be re-imported
 
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
+        const XLSX = await import("xlsx");
         const data = ev.target?.result;
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];

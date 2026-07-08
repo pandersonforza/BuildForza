@@ -4,22 +4,17 @@ import { getCurrentUser } from '@/lib/auth';
 
 export const maxDuration = 30;
 
-/** Compute the next available DF-XXXX number by scanning existing invoices. */
+/** Compute the next available DF-XXXX number from the highest existing one. */
 async function getNextDevFeeNumber(): Promise<number> {
-  const dfInvoices = await prisma.invoice.findMany({
+  const latest = await prisma.invoice.findFirst({
     where: { invoiceNumber: { startsWith: 'DF-' } },
     select: { invoiceNumber: true },
+    orderBy: { invoiceNumber: 'desc' },
   });
 
-  let max = 0;
-  for (const inv of dfInvoices) {
-    const match = inv.invoiceNumber?.match(/^DF-(\d+)$/);
-    if (match) {
-      const n = parseInt(match[1], 10);
-      if (n > max) max = n;
-    }
-  }
-  return max + 1;
+  if (!latest?.invoiceNumber) return 1;
+  const match = latest.invoiceNumber.match(/^DF-(\d+)$/);
+  return match ? parseInt(match[1], 10) + 1 : 1;
 }
 
 function formatDevFeeNumber(n: number): string {

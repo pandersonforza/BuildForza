@@ -48,6 +48,12 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
   completed: <Check className="h-4 w-4 text-emerald-500" />,
 };
 
+const PRIORITY_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
+
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,11 +164,6 @@ export function TaskList() {
     label: u.id === currentUser?.id ? `${u.name} (me)` : u.name,
   }));
 
-  const priorityOptions = [
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-  ];
 
   return (
     <>
@@ -296,7 +297,7 @@ export function TaskList() {
                   id="taskPriority"
                   value={newPriority}
                   onChange={(e) => setNewPriority(e.target.value)}
-                  options={priorityOptions}
+                  options={PRIORITY_OPTIONS}
                 />
               </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
@@ -138,14 +138,20 @@ export function InvoiceList({
   const uniqueStatuses = ["All", "Submitted", "Approved", "Paid"].filter(
     (s) => s === "All" || invoices.some((i) => i.status === s)
   );
-  const uniqueVendors = Array.from(new Set(invoices.map((i) => i.vendorName).filter(Boolean))).sort();
-  const uniqueLineItems = Array.from(
-    new Map(
-      invoices
-        .filter((i) => i.lineItem)
-        .map((i) => [`${i.lineItem!.category.name} — ${i.lineItem!.description}`, i.lineItem!.id])
-    ).entries()
-  ).sort(([a], [b]) => a.localeCompare(b));
+  const uniqueVendors = useMemo(
+    () => Array.from(new Set(invoices.map((i) => i.vendorName).filter(Boolean))).sort(),
+    [invoices]
+  );
+  const uniqueLineItems = useMemo(
+    () => Array.from(
+      new Map(
+        invoices
+          .filter((i) => i.lineItem)
+          .map((i) => [`${i.lineItem!.category.name} — ${i.lineItem!.description}`, i.lineItem!.id])
+      ).entries()
+    ).sort(([a], [b]) => a.localeCompare(b)),
+    [invoices]
+  );
 
   const activeFilterCount = [
     statusFilter !== "All",
@@ -154,13 +160,13 @@ export function InvoiceList({
     lineItemFilter !== "",
   ].filter(Boolean).length;
 
-  const filteredInvoices = invoices.filter((inv) => {
+  const filteredInvoices = useMemo(() => invoices.filter((inv) => {
     if (statusFilter !== "All" && inv.status !== statusFilter) return false;
     if (groupFilter !== "All" && inv.project?.projectGroup !== groupFilter) return false;
     if (vendorFilter && inv.vendorName !== vendorFilter) return false;
     if (lineItemFilter && inv.lineItem?.id !== lineItemFilter) return false;
     return true;
-  });
+  }), [invoices, statusFilter, groupFilter, vendorFilter, lineItemFilter]);
 
   // Invoices in the current view that have a downloadable PDF
   const invoicesWithPdf = filteredInvoices.filter(

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface ApprovedInvoice {
   id: string;

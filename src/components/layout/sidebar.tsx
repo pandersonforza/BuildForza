@@ -38,8 +38,9 @@ export function Sidebar({ open, onOpenChange, collapsed = false, onToggleCollaps
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const visibleItems = navItems.filter(
-    (item) => !("adminOnly" in item && item.adminOnly) || user?.role === "admin"
+  const visibleItems = React.useMemo(
+    () => navItems.filter((item) => !("adminOnly" in item && item.adminOnly) || user?.role === "admin"),
+    [user?.role]
   );
 
   return (

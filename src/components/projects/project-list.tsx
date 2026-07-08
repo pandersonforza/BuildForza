@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
@@ -39,7 +39,7 @@ export function ProjectList({ projects, onMutate }: ProjectListProps) {
     }
   };
 
-  const columns: ColumnDef<Project, unknown>[] = [
+  const columns: ColumnDef<Project, unknown>[] = useMemo(() => [
     {
       accessorKey: "name",
       header: "Name",
@@ -106,20 +106,20 @@ export function ProjectList({ projects, onMutate }: ProjectListProps) {
         </div>
       ) : null,
     },
-  ];
+  ], [canEdit, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [groupFilter, setGroupFilter] = useState<string>("All");
   const [tab, setTab] = useState<"active" | "completed" | "onhold" | "dead">("active");
 
-  const filtered = projects.filter((p) => {
-    if (groupFilter !== "All" && p.projectGroup !== groupFilter) return false;
-    return true;
-  });
+  const filtered = useMemo(
+    () => projects.filter((p) => groupFilter === "All" || p.projectGroup === groupFilter),
+    [projects, groupFilter]
+  );
 
-  const activeProjects = filtered.filter((p) => p.status === "Active");
-  const completedProjects = filtered.filter((p) => p.status === "Completed");
-  const onHoldProjects = filtered.filter((p) => p.status === "On Hold");
-  const deadProjects = filtered.filter((p) => p.status === "Dead");
+  const activeProjects = useMemo(() => filtered.filter((p) => p.status === "Active"), [filtered]);
+  const completedProjects = useMemo(() => filtered.filter((p) => p.status === "Completed"), [filtered]);
+  const onHoldProjects = useMemo(() => filtered.filter((p) => p.status === "On Hold"), [filtered]);
+  const deadProjects = useMemo(() => filtered.filter((p) => p.status === "Dead"), [filtered]);
 
   return (
     <div>
