@@ -52,14 +52,16 @@ export default function ReportsPage() {
   );
 
   const handleExport = () => {
+    const date = new Date().toISOString().slice(0, 10);
     const name = [
       group !== "All" ? group : "",
       status !== "All" ? status : "",
       "Cost_Report",
+      date,
     ]
       .filter(Boolean)
       .join("_");
-    exportReportToExcel(rows, name || "PropHound_Cost_Report", {
+    exportReportToExcel(rows, name || `PropHound_Cost_Report_${date}`, {
       group: group !== "All" ? group : undefined,
       status: status !== "All" ? status : undefined,
       search: debouncedSearch || undefined,
