@@ -63,7 +63,11 @@ export default function ReportsPage() {
     ]
       .filter(Boolean)
       .join("_");
-    exportReportToExcel(rows, name || "PropHound_Cost_Report");
+    exportReportToExcel(rows, name || "PropHound_Cost_Report", {
+      group: group !== "All" ? group : undefined,
+      status: status !== "All" ? status : undefined,
+      search: debouncedSearch || undefined,
+    });
   };
 
   return (
