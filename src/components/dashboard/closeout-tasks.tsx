@@ -50,9 +50,6 @@ export function CloseoutTasks() {
         <CardTitle className="flex items-center gap-2">
           <CheckSquare className="h-4 w-4 text-amber-500" />
           My Closeout Tasks
-          <span className="ml-auto text-xs font-normal text-muted-foreground">
-            {tasks.length} item{tasks.length !== 1 ? "s" : ""}
-          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
