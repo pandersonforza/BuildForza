@@ -75,12 +75,12 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Progress */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+      <div className="flex items-center gap-4 pb-1">
+        <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
           <div
-            className="h-2 rounded-full bg-emerald-500 transition-all duration-300"
+            className="h-1.5 rounded-full bg-emerald-500 transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -96,7 +96,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
 
         return (
           <div key={category} className="rounded-lg border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 bg-card border-b border-border">
+            <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
               <h3 className="text-base font-semibold">{category.replace(/^\d+\.\s*/, "")}</h3>
               <span className="text-xs text-muted-foreground">{catDone}/{catItems.length}</span>
             </div>
@@ -104,19 +104,19 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
               {catItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`flex items-start gap-3 px-4 py-3 ${item.completed ? "bg-muted/30" : ""}`}
+                  className={`flex items-center gap-3 px-4 py-1.5 ${item.completed ? "bg-muted/30" : ""}`}
                 >
                   {/* Checkbox */}
                   <input
                     type="checkbox"
                     checked={item.completed}
                     onChange={(e) => updateItem(item.id, { completed: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-500 cursor-pointer"
+                    className="h-4 w-4 shrink-0 accent-emerald-500 cursor-pointer"
                   />
 
                   {/* Title */}
                   <span
-                    className={`flex-1 leading-snug ${
+                    className={`flex-1 text-sm leading-snug ${
                       item.completed ? "line-through text-muted-foreground" : ""
                     }`}
                   >
@@ -129,7 +129,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
                     onChange={(e) =>
                       updateItem(item.id, { assigneeId: e.target.value || null })
                     }
-                    className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground w-36 shrink-0"
+                    className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
                   >
                     <option value="">Unassigned</option>
                     {users.map((u) => (
@@ -146,7 +146,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
                     onChange={(e) =>
                       updateItem(item.id, { dueDate: e.target.value || null })
                     }
-                    className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground w-36 shrink-0"
+                    className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
                   />
                 </div>
               ))}
