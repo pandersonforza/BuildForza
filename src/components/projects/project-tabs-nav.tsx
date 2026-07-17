@@ -15,7 +15,8 @@ const tabs = [
   { label: "Invoices", href: "/invoices" },
   { label: "Milestones", href: "/milestones" },
   { label: "Distribution", href: "/distribution" },
-{ label: "Notes", href: "/notes" },
+  { label: "Notes", href: "/notes" },
+  { label: "Closeout", href: "/closeout" },
 ];
 
 export function ProjectTabsNav({ projectId }: ProjectTabsNavProps) {
