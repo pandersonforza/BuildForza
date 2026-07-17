@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/components/ui/toast";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Assignee {
   id: string;
@@ -129,11 +130,10 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
                   </select>
-                  <input
-                    type="date"
-                    value={item.dueDate ? item.dueDate.slice(0, 10) : ""}
-                    onChange={(e) => updateItem(item.id, { dueDate: e.target.value || null })}
-                    className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
+                  <DatePicker
+                    value={item.dueDate ? item.dueDate.slice(0, 10) : null}
+                    onChange={(date) => updateItem(item.id, { dueDate: date })}
+                    className="w-32 shrink-0"
                   />
                 </div>
               ))}
