@@ -80,16 +80,16 @@ export default function DashboardPage() {
         <KPICards data={data} />
       )}
 
+      <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))]">
+        {canEdit && <PendingApprovals />}
+        <CloseoutTasks />
+      </div>
+
       {canEdit && (
         <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))]">
-          <PendingApprovals />
           <ReturnedInvoices />
         </div>
       )}
-
-      <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))]">
-        <CloseoutTasks />
-      </div>
 
       <ProjectStatusChart
         group={groupFilter}
