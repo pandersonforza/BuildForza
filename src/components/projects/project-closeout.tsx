@@ -97,7 +97,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
         return (
           <div key={category} className="rounded-lg border border-border overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 bg-card border-b border-border">
-              <h3 className="text-sm font-semibold">{category}</h3>
+              <h3 className="text-base font-semibold">{category.replace(/^\d+\.\s*/, "")}</h3>
               <span className="text-xs text-muted-foreground">{catDone}/{catItems.length}</span>
             </div>
             <div className="divide-y divide-border">
@@ -116,7 +116,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
 
                   {/* Title */}
                   <span
-                    className={`flex-1 text-sm leading-snug ${
+                    className={`flex-1 leading-snug ${
                       item.completed ? "line-through text-muted-foreground" : ""
                     }`}
                   >
