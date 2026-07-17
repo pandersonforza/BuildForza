@@ -4,9 +4,10 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -20,7 +21,7 @@ export async function PATCH(
     if ('notes' in body) data.notes = notes ?? null;
 
     const item = await prisma.closeoutItem.update({
-      where: { id: params.id },
+      where: { id },
       data,
       include: { assignee: { select: { id: true, name: true } } },
     });
