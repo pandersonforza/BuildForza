@@ -89,71 +89,72 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
         </span>
       </div>
 
-      {/* Categories */}
-      {categories.map((category) => {
-        const catItems = items.filter((i) => i.category === category);
-        const catDone = catItems.filter((i) => i.completed).length;
+      {/* Categories — 2-column grid */}
+      <div className="grid grid-cols-2 gap-3 items-start">
+        {categories.map((category) => {
+          const catItems = items.filter((i) => i.category === category);
+          const catDone = catItems.filter((i) => i.completed).length;
 
-        return (
-          <div key={category} className="rounded-lg border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
-              <h3 className="text-base font-semibold">{category.replace(/^\d+\.\s*/, "")}</h3>
-              <span className="text-xs text-muted-foreground">{catDone}/{catItems.length}</span>
-            </div>
-            <div className="divide-y divide-border">
-              {catItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 px-4 py-1.5 ${item.completed ? "bg-muted/30" : ""}`}
-                >
-                  {/* Checkbox */}
-                  <input
-                    type="checkbox"
-                    checked={item.completed}
-                    onChange={(e) => updateItem(item.id, { completed: e.target.checked })}
-                    className="h-4 w-4 shrink-0 accent-emerald-500 cursor-pointer"
-                  />
-
-                  {/* Title */}
-                  <span
-                    className={`flex-1 text-sm leading-snug ${
-                      item.completed ? "line-through text-muted-foreground" : ""
-                    }`}
+          return (
+            <div key={category} className="rounded-lg border border-border overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border">
+                <h3 className="text-sm font-semibold">{category.replace(/^\d+\.\s*/, "")}</h3>
+                <span className="text-xs text-muted-foreground">{catDone}/{catItems.length}</span>
+              </div>
+              <div className="divide-y divide-border">
+                {catItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`px-3 py-1.5 ${item.completed ? "bg-muted/30" : ""}`}
                   >
-                    {item.title}
-                  </span>
-
-                  {/* Assignee */}
-                  <select
-                    value={item.assigneeId ?? ""}
-                    onChange={(e) =>
-                      updateItem(item.id, { assigneeId: e.target.value || null })
-                    }
-                    className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
-                  >
-                    <option value="">Unassigned</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Due date */}
-                  <input
-                    type="date"
-                    value={item.dueDate ? item.dueDate.slice(0, 10) : ""}
-                    onChange={(e) =>
-                      updateItem(item.id, { dueDate: e.target.value || null })
-                    }
-                    className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
-                  />
-                </div>
-              ))}
+                    {/* Title row */}
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={item.completed}
+                        onChange={(e) => updateItem(item.id, { completed: e.target.checked })}
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-emerald-500 cursor-pointer"
+                      />
+                      <span
+                        className={`text-sm leading-snug ${
+                          item.completed ? "line-through text-muted-foreground" : ""
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                    </div>
+                    {/* Controls row */}
+                    <div className="flex gap-1.5 mt-1 ml-5">
+                      <select
+                        value={item.assigneeId ?? ""}
+                        onChange={(e) =>
+                          updateItem(item.id, { assigneeId: e.target.value || null })
+                        }
+                        className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground flex-1 min-w-0"
+                      >
+                        <option value="">Unassigned</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="date"
+                        value={item.dueDate ? item.dueDate.slice(0, 10) : ""}
+                        onChange={(e) =>
+                          updateItem(item.id, { dueDate: e.target.value || null })
+                        }
+                        className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-28 shrink-0"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
