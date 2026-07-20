@@ -49,7 +49,7 @@ const DEFAULT_ITEMS: { category: string; title: string; sortOrder: number }[] = 
   { category: "7. Leasing & Tenancy", sortOrder: 2, title: "Obtain estoppel certificates from tenants" },
   { category: "7. Leasing & Tenancy", sortOrder: 3, title: "Obtain subordination, non-disturbance and attornment (SNDA) agreements as needed" },
   { category: "7. Leasing & Tenancy", sortOrder: 4, title: "Reconcile security deposits, prepaid rent, and CAM / operating expense reconciliations" },
-  { category: "7. Leasing & Tenancy", sortOrder: 5, title: "Confirm all TIs and leasing commissions have been paid" },
+  { category: "7. Leasing & Tenancy", sortOrder: 5, title: "Confirm all Tis and leasing commissions have been paid" },
   // 8. Property Diligence Package for Buyer
   { category: "8. Property Diligence Package for Buyer", sortOrder: 0, title: "Compile service contracts and vendor agreements (assign or terminate as needed)" },
   { category: "8. Property Diligence Package for Buyer", sortOrder: 1, title: "Gather utility accounts, meters, and transfer instructions" },
