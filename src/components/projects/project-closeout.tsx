@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { MessageSquare } from "lucide-react";
+import { format, parseISO } from "date-fns";
 
 interface Assignee {
   id: string;
@@ -19,11 +20,53 @@ interface CloseoutItem {
   assignee: Assignee | null;
   dueDate: string | null;
   notes: string | null;
+  notesUpdatedAt: string | null;
   sortOrder: number;
 }
 
 interface ProjectCloseoutProps {
   projectId: string;
+}
+
+function NotesPanel({ item, onSave }: { item: CloseoutItem; onSave: (notes: string | null) => void }) {
+  const [value, setValue] = useState(item.notes ?? "");
+  const [saving, setSaving] = useState(false);
+  const dirty = value.trim() !== (item.notes ?? "").trim();
+
+  const save = async () => {
+    if (!dirty) return;
+    setSaving(true);
+    await onSave(value.trim() || null);
+    setSaving(false);
+  };
+
+  return (
+    <div className="px-4 pb-2.5 pt-1">
+      <textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Add a note..."
+        rows={2}
+        className="w-full text-xs border border-border rounded px-2 py-1.5 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
+      />
+      <div className="flex items-center justify-between mt-1">
+        {item.notesUpdatedAt ? (
+          <span className="text-xs text-muted-foreground">
+            Saved {format(parseISO(item.notesUpdatedAt), "MMM d, yyyy h:mm a")}
+          </span>
+        ) : (
+          <span />
+        )}
+        <button
+          onClick={save}
+          disabled={!dirty || saving}
+          className="text-xs px-2 py-0.5 rounded bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors"
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
@@ -160,20 +203,10 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
                       />
                     </div>
                     {notesOpen && (
-                      <div className="px-4 pb-2 pt-0.5">
-                        <textarea
-                          defaultValue={item.notes ?? ""}
-                          onBlur={(e) => {
-                            const val = e.target.value.trim() || null;
-                            if (val !== (item.notes ?? null)) {
-                              updateItem(item.id, { notes: val });
-                            }
-                          }}
-                          placeholder="Add a note..."
-                          rows={2}
-                          className="w-full text-xs border border-border rounded px-2 py-1.5 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
-                        />
-                      </div>
+                      <NotesPanel
+                        item={item}
+                        onSave={(notes) => updateItem(item.id, { notes })}
+                      />
                     )}
                   </div>
                 );

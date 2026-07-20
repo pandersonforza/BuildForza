@@ -362,7 +362,8 @@ model CloseoutItem {
   completed  Boolean   @default(false)
   assigneeId String?
   dueDate    DateTime?
-  notes      String?
+  notes           String?
+  notesUpdatedAt  DateTime?
   sortOrder  Int       @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

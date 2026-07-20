@@ -18,7 +18,10 @@ export async function PATCH(
     if (completed !== undefined) data.completed = completed;
     if ('assigneeId' in body) data.assigneeId = assigneeId ?? null;
     if ('dueDate' in body) data.dueDate = dueDate ? new Date(dueDate) : null;
-    if ('notes' in body) data.notes = notes ?? null;
+    if ('notes' in body) {
+      data.notes = notes ?? null;
+      data.notesUpdatedAt = notes ? new Date() : null;
+    }
 
     const item = await prisma.closeoutItem.update({
       where: { id },
