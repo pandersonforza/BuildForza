@@ -11,7 +11,7 @@ interface ProjectTabsNavProps {
 const tabs = [
   { label: "Overview", href: "" },
   { label: "Budget", href: "/budget" },
-  { label: "Draws", href: "/draws" },
+
   { label: "Invoices", href: "/invoices" },
   { label: "Milestones", href: "/milestones" },
   { label: "Notes", href: "/notes" },
