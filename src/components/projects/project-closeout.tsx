@@ -179,7 +179,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
                         onClick={() => toggleNotes(item.id)}
                         className={`shrink-0 p-0.5 rounded transition-colors ${
                           hasNotes
-                            ? "text-primary hover:text-primary/80"
+                            ? "text-amber-500 hover:text-amber-400"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                         aria-label="Toggle notes"
