@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
+import { MessageSquare } from "lucide-react";
 
 interface Assignee {
   id: string;
@@ -29,6 +30,7 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
   const [items, setItems] = useState<CloseoutItem[]>([]);
   const [users, setUsers] = useState<Assignee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const fetchItems = useCallback(async () => {
@@ -68,6 +70,14 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
     }
   };
 
+  const toggleNotes = (id: string) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   if (loading) return <div className="py-12 text-center text-muted-foreground text-sm">Loading...</div>;
 
   const categories = Array.from(new Set(items.map((i) => i.category)));
@@ -102,41 +112,72 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
               <span className="text-xs text-muted-foreground">{catDone}/{catItems.length}</span>
             </div>
             <div className="divide-y divide-border">
-              {catItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 px-4 py-1.5 ${item.completed ? "bg-muted/30" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.completed}
-                    onChange={(e) => updateItem(item.id, { completed: e.target.checked })}
-                    className="h-4 w-4 shrink-0 accent-emerald-500 cursor-pointer"
-                  />
-                  <span
-                    className={`flex-1 text-sm leading-snug ${
-                      item.completed ? "line-through text-muted-foreground" : ""
-                    }`}
-                  >
-                    {item.title}
-                  </span>
-                  <select
-                    value={item.assigneeId ?? ""}
-                    onChange={(e) => updateItem(item.id, { assigneeId: e.target.value || null })}
-                    className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
-                  >
-                    <option value="">Unassigned</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                  </select>
-                  <DatePicker
-                    value={item.dueDate ? item.dueDate.slice(0, 10) : null}
-                    onChange={(date) => updateItem(item.id, { dueDate: date })}
-                    className="w-32 shrink-0"
-                  />
-                </div>
-              ))}
+              {catItems.map((item) => {
+                const notesOpen = expandedNotes.has(item.id);
+                const hasNotes = !!item.notes?.trim();
+
+                return (
+                  <div key={item.id} className={item.completed ? "bg-muted/30" : ""}>
+                    <div className="flex items-center gap-3 px-4 py-1.5">
+                      <input
+                        type="checkbox"
+                        checked={item.completed}
+                        onChange={(e) => updateItem(item.id, { completed: e.target.checked })}
+                        className="h-4 w-4 shrink-0 accent-emerald-500 cursor-pointer"
+                      />
+                      <span
+                        className={`flex-1 text-sm leading-snug ${
+                          item.completed ? "line-through text-muted-foreground" : ""
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                      <button
+                        onClick={() => toggleNotes(item.id)}
+                        className={`shrink-0 p-0.5 rounded transition-colors ${
+                          hasNotes
+                            ? "text-primary hover:text-primary/80"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        aria-label="Toggle notes"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      </button>
+                      <select
+                        value={item.assigneeId ?? ""}
+                        onChange={(e) => updateItem(item.id, { assigneeId: e.target.value || null })}
+                        className="text-xs border border-border rounded px-1.5 py-0.5 bg-background text-foreground w-32 shrink-0"
+                      >
+                        <option value="">Unassigned</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </select>
+                      <DatePicker
+                        value={item.dueDate ? item.dueDate.slice(0, 10) : null}
+                        onChange={(date) => updateItem(item.id, { dueDate: date })}
+                        className="w-32 shrink-0"
+                      />
+                    </div>
+                    {notesOpen && (
+                      <div className="px-4 pb-2 pt-0.5">
+                        <textarea
+                          defaultValue={item.notes ?? ""}
+                          onBlur={(e) => {
+                            const val = e.target.value.trim() || null;
+                            if (val !== (item.notes ?? null)) {
+                              updateItem(item.id, { notes: val });
+                            }
+                          }}
+                          placeholder="Add a note..."
+                          rows={2}
+                          className="w-full text-xs border border-border rounded px-2 py-1.5 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
