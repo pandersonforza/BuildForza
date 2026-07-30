@@ -365,64 +365,49 @@ export function InvoiceApprovalDialog({
               </div>
             )}
 
-            {/* Admin status override */}
-            {isAdmin && (
-              <div className="border-t border-border pt-3">
-                {!showStatusOverride ? (
-                  <button
-                    onClick={() => setShowStatusOverride(true)}
-                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-                  >
-                    Override status (admin)
-                  </button>
-                ) : (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Set status directly</Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={overrideStatus}
-                        onChange={(e) => setOverrideStatus(e.target.value)}
-                        className="flex-1 text-sm border border-border rounded px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      >
-                        <option value="">Select status…</option>
-                        {["Submitted", "Approved", "Paid", "Rejected"].map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleStatusOverride}
-                        disabled={!overrideStatus || actionLoading}
-                      >
-                        Apply
-                      </Button>
-                      <button
-                        onClick={() => { setShowStatusOverride(false); setOverrideStatus(""); }}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                    {(overrideStatus === "Submitted" || overrideStatus === "Rejected") && (
-                      <p className="text-xs text-amber-500">
-                        Moving from Approved or Paid will reverse the budget increment.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
         <DialogFooter className="flex items-center gap-2">
-          {pdfUrl && (
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mr-auto">
-              <ExternalLink className="h-3.5 w-3.5" />
-              Open PDF
-            </a>
-          )}
+          <div className="flex items-center gap-2 mr-auto">
+            {pdfUrl && (
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open PDF
+              </a>
+            )}
+            {isAdmin && !showStatusOverride && (
+              <button
+                onClick={() => setShowStatusOverride(true)}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Override status
+              </button>
+            )}
+            {isAdmin && showStatusOverride && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={overrideStatus}
+                  onChange={(e) => setOverrideStatus(e.target.value)}
+                  className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                >
+                  <option value="">Set status…</option>
+                  {["Submitted", "Approved", "Paid", "Rejected"].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <Button size="sm" variant="outline" onClick={handleStatusOverride} disabled={!overrideStatus || actionLoading}>
+                  Apply
+                </Button>
+                <button
+                  onClick={() => { setShowStatusOverride(false); setOverrideStatus(""); }}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
           <Button variant="outline" onClick={handleClose} disabled={actionLoading}>Cancel</Button>
           {!showRejectInput ? (
             <Button
