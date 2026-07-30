@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { SearchableSelect, SelectNative } from "@/components/ui/select";
 import { ExternalLink, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export interface InvoiceForApproval {
   id: string;
@@ -56,7 +57,11 @@ export function InvoiceApprovalDialog({
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [duplicates, setDuplicates] = useState<{ id: string; invoiceNumber: string | null; amount: number; status: string; project: { name: string } | null }[]>([]);
+  const [showStatusOverride, setShowStatusOverride] = useState(false);
+  const [overrideStatus, setOverrideStatus] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   // Populate form when invoice changes
   useEffect(() => {
@@ -116,6 +121,8 @@ export function InvoiceApprovalDialog({
     onOpenChange(false);
     setShowRejectInput(false);
     setRejectReason("");
+    setShowStatusOverride(false);
+    setOverrideStatus("");
     setLineItems([]);
     setDuplicates([]);
   };
@@ -172,6 +179,29 @@ export function InvoiceApprovalDialog({
       onSuccess();
     } catch (error) {
       toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to reject invoice", variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStatusOverride = async () => {
+    if (!invoice || !overrideStatus) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/invoices/${invoice.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminOverride: true, status: overrideStatus }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update status");
+      }
+      toast({ title: "Status updated", description: `Invoice moved to "${overrideStatus}".` });
+      handleClose();
+      onSuccess();
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to update status", variant: "destructive" });
     } finally {
       setActionLoading(false);
     }
@@ -332,6 +362,55 @@ export function InvoiceApprovalDialog({
                   placeholder="Explain why this invoice is being rejected..."
                   rows={2}
                 />
+              </div>
+            )}
+
+            {/* Admin status override */}
+            {isAdmin && (
+              <div className="border-t border-border pt-3">
+                {!showStatusOverride ? (
+                  <button
+                    onClick={() => setShowStatusOverride(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                  >
+                    Override status (admin)
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Set status directly</Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={overrideStatus}
+                        onChange={(e) => setOverrideStatus(e.target.value)}
+                        className="flex-1 text-sm border border-border rounded px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      >
+                        <option value="">Select status…</option>
+                        {["Submitted", "Approved", "Paid", "Rejected"].map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleStatusOverride}
+                        disabled={!overrideStatus || actionLoading}
+                      >
+                        Apply
+                      </Button>
+                      <button
+                        onClick={() => { setShowStatusOverride(false); setOverrideStatus(""); }}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {(overrideStatus === "Submitted" || overrideStatus === "Rejected") && (
+                      <p className="text-xs text-amber-500">
+                        Moving from Approved or Paid will reverse the budget increment.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

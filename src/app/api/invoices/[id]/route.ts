@@ -61,6 +61,62 @@ export async function PUT(
       );
     }
 
+    // Admin status override — bypasses normal workflow rules
+    if (body.adminOverride && body.status && body.status !== existing.status) {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      }
+
+      const wasApprovedOrPaid = existing.status === 'Approved' || existing.status === 'Paid';
+      const movingBack = body.status === 'Submitted' || body.status === 'Rejected';
+
+      const invoice = await prisma.$transaction(async (tx) => {
+        // Reverse budget increment if moving back from Approved/Paid
+        if (wasApprovedOrPaid && movingBack) {
+          const isPayApp = existing.aiNotes?.includes('__payAppLineItems__');
+          if (isPayApp && existing.aiNotes) {
+            const match = existing.aiNotes.match(/__payAppLineItems__([\s\S]+)$/);
+            if (match) {
+              try {
+                const payAppItems: { lineItemId: string; amount: number }[] = JSON.parse(match[1]);
+                for (const item of payAppItems) {
+                  if (item.lineItemId && item.amount !== 0) {
+                    await tx.budgetLineItem.update({
+                      where: { id: item.lineItemId },
+                      data: { actualCost: { decrement: item.amount } },
+                    });
+                  }
+                }
+              } catch { /* skip */ }
+            }
+          } else if (existing.budgetLineItemId) {
+            await tx.budgetLineItem.update({
+              where: { id: existing.budgetLineItemId },
+              data: { actualCost: { decrement: existing.amount } },
+            });
+          }
+        }
+
+        return tx.invoice.update({
+          where: { id },
+          data: {
+            status: body.status,
+            ...(body.status === 'Rejected' && { rejectedDate: new Date(), rejectionReason: body.rejectionReason ?? null }),
+            ...(body.status !== 'Rejected' && { rejectionReason: null }),
+            ...(body.status !== 'Approved' && body.status !== 'Paid' && { approvedDate: null }),
+            ...(body.status !== 'Paid' && { paidDate: null }),
+          },
+          include: {
+            project: true,
+            lineItem: { include: { category: true } },
+          },
+        });
+      });
+
+      return NextResponse.json(invoice);
+    }
+
     // If a status transition is requested, handle workflow logic
     if (body.status && body.status !== existing.status) {
       const currentStatus = existing.status;
