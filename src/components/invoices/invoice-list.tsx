@@ -69,8 +69,33 @@ export function InvoiceList({
   const [lineItemFilter, setLineItemFilter] = useState<string>(initialLineItemFilter);
   const [filtersOpen, setFiltersOpen] = useState(!!initialLineItemFilter);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [viewOverrideStatus, setViewOverrideStatus] = useState("");
+  const [viewShowOverride, setViewShowOverride] = useState(false);
   const { toast } = useToast();
   const { user, canEdit, canMarkPaid } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  const handleViewStatusOverride = async () => {
+    if (!viewingInvoice || !viewOverrideStatus) return;
+    try {
+      const res = await fetch(`/api/invoices/${viewingInvoice.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminOverride: true, status: viewOverrideStatus }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update status");
+      }
+      toast({ title: "Status updated", description: `Invoice moved to "${viewOverrideStatus}".` });
+      setViewingInvoice(null);
+      setViewShowOverride(false);
+      setViewOverrideStatus("");
+      onMutate();
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to update status", variant: "destructive" });
+    }
+  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -571,7 +596,7 @@ export function InvoiceList({
       />
 
       {/* Read-only invoice view dialog */}
-      <Dialog open={!!viewingInvoice} onOpenChange={(o) => { if (!o) setViewingInvoice(null); }}>
+      <Dialog open={!!viewingInvoice} onOpenChange={(o) => { if (!o) { setViewingInvoice(null); setViewShowOverride(false); setViewOverrideStatus(""); } }}>
         {viewingInvoice && (() => {
           const notes = viewingInvoice.aiNotes || "";
           const match = notes.match(/__payAppLineItems__([\s\S]+)$/);
@@ -669,18 +694,51 @@ export function InvoiceList({
               </div>
 
               <DialogFooter>
-                {pdfUrl && (
-                  <a
-                    href={pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mr-auto"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Open PDF
-                  </a>
-                )}
-                <Button variant="outline" onClick={() => setViewingInvoice(null)}>Close</Button>
+                <div className="flex items-center gap-2 mr-auto">
+                  {pdfUrl && (
+                    <a
+                      href={pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Open PDF
+                    </a>
+                  )}
+                  {isAdmin && !viewShowOverride && (
+                    <button
+                      onClick={() => setViewShowOverride(true)}
+                      className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                    >
+                      Override status
+                    </button>
+                  )}
+                  {isAdmin && viewShowOverride && (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={viewOverrideStatus}
+                        onChange={(e) => setViewOverrideStatus(e.target.value)}
+                        className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      >
+                        <option value="">Set status…</option>
+                        {["Submitted", "Approved", "Paid", "Rejected"].map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      <Button size="sm" variant="outline" onClick={handleViewStatusOverride} disabled={!viewOverrideStatus}>
+                        Apply
+                      </Button>
+                      <button
+                        onClick={() => { setViewShowOverride(false); setViewOverrideStatus(""); }}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <Button variant="outline" onClick={() => { setViewingInvoice(null); setViewShowOverride(false); setViewOverrideStatus(""); }}>Close</Button>
               </DialogFooter>
             </DialogContent>
           );
