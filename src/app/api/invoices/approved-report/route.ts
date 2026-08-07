@@ -38,13 +38,14 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const invoices = await prisma.invoice.findMany({
-      where: { status: 'Approved' },
+      where: { status: { in: ['Approved', 'Paid'] } },
       select: {
         id: true,
         invoiceNumber: true,
         vendorName: true,
         amount: true,
         date: true,
+        status: true,
         approver: true,
         project: {
           select: { name: true, projectGroup: true },
@@ -83,10 +84,11 @@ export async function GET() {
 
     // Column x positions and widths
     const col = {
-      vendor:  { x: margin,            w: 130 },
-      inv:     { x: margin + 130,      w: 72  },
-      project: { x: margin + 202,      w: 148 },
-      date:    { x: margin + 350,      w: 82  },
+      vendor:  { x: margin,            w: 115 },
+      inv:     { x: margin + 115,      w: 65  },
+      project: { x: margin + 180,      w: 130 },
+      date:    { x: margin + 310,      w: 72  },
+      status:  { x: margin + 382,      w: 60  },
       amount:  { x: margin + contentWidth, w: 0 }, // right-aligned to edge
     };
 
@@ -132,7 +134,7 @@ export async function GET() {
     };
 
     // ── Page header ───────────────────────────────────────────
-    draw('APPROVED INVOICES - AWAITING PAYMENT', margin, y, { bold: true, size: 16, color: teal });
+    draw('APPROVED & PAID INVOICES', margin, y, { bold: true, size: 16, color: teal });
     y -= 12;
     draw(`Generated ${formatDate(new Date())}`, margin, y, { size: 8, color: muted });
     y -= 8;
@@ -194,6 +196,7 @@ export async function GET() {
       draw('Invoice #',  col.inv.x,     y, { bold: true, size: 8, color: muted });
       draw('Project',    col.project.x, y, { bold: true, size: 8, color: muted });
       draw('Date',       col.date.x,    y, { bold: true, size: 8, color: muted });
+      draw('Status',     col.status.x,  y, { bold: true, size: 8, color: muted });
       draw('Amount',     col.amount.x,  y, { bold: true, size: 8, color: muted, right: true });
       y -= 5;
       hline(y);
@@ -207,6 +210,7 @@ export async function GET() {
         draw(inv.invoiceNumber ?? '-',       col.inv.x,     y, { size: 9, maxW: col.inv.w - 4 });
         draw(inv.project?.name ?? '-',       col.project.x, y, { size: 9, maxW: col.project.w - 4 });
         draw(formatDate(inv.date),           col.date.x,    y, { size: 9, maxW: col.date.w - 4 });
+        draw(inv.status,                     col.status.x,  y, { size: 9, maxW: col.status.w - 4, color: inv.status === 'Paid' ? muted : dark });
         draw(formatCurrency(inv.amount),     col.amount.x,  y, { size: 9, right: true });
         y -= 13;
         hline(y, margin, pageWidth - margin, 0.3, rgb(0.94, 0.94, 0.94));
@@ -230,7 +234,7 @@ export async function GET() {
     hline(y, margin, pageWidth - margin, 1.5, teal);
     y -= 14;
     draw('GRAND TOTAL', margin, y, { bold: true, size: 11 });
-    draw(`${grandCount} invoice${grandCount !== 1 ? 's' : ''} awaiting payment`, margin + 90, y, { size: 8, color: muted });
+    draw(`${grandCount} invoice${grandCount !== 1 ? 's' : ''}`, margin + 90, y, { size: 8, color: muted });
     draw(formatCurrency(grandTotal), col.amount.x, y, { bold: true, size: 13, color: teal, right: true });
 
     const pdfBytes = await doc.save();
@@ -239,7 +243,7 @@ export async function GET() {
     return new NextResponse(new Uint8Array(pdfBytes), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="ApprovedInvoices_${dateStr}.pdf"`,
+        'Content-Disposition': `attachment; filename="Approved_Paid_Invoices_${dateStr}.pdf"`,
       },
     });
   } catch (error) {
