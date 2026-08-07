@@ -59,7 +59,7 @@ export function CloseoutTasks() {
       </CardHeader>
       <CardContent className="p-0">
         <ul className="divide-y divide-border">
-          {tasks.map((task) => {
+          {tasks.slice(0, 5).map((task) => {
             const due = task.dueDate ? parseISO(task.dueDate) : null;
             const overdue = due && isPast(due);
             const done = !!task.completedAt;
@@ -112,6 +112,11 @@ export function CloseoutTasks() {
             );
           })}
         </ul>
+        {tasks.filter((t) => !t.completedAt).length > 5 && (
+          <p className="text-xs text-muted-foreground px-6 py-3">
+            Showing 5 of {tasks.filter((t) => !t.completedAt).length} tasks — go to the project Closeout tab to see all.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
