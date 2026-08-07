@@ -54,23 +54,23 @@ export async function GET() {
       orderBy: [{ project: { projectGroup: 'asc' } }, { date: 'asc' }],
     });
 
-    // Group by projectGroup; invoices with no project go into "Unassigned"
+    // Split by status, then group each by projectGroup
     type InvoiceRow = typeof invoices[number];
-    const grouped = new Map<string, InvoiceRow[]>();
 
-    for (const group of PROJECT_GROUPS) {
-      grouped.set(group, []);
-    }
-    grouped.set('Unassigned', []);
+    const buildGroups = (rows: InvoiceRow[]) => {
+      const map = new Map<string, InvoiceRow[]>();
+      for (const g of PROJECT_GROUPS) map.set(g, []);
+      map.set('Unassigned', []);
+      for (const inv of rows) {
+        const key = inv.project?.projectGroup ?? 'Unassigned';
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(inv);
+      }
+      return [...map.entries()].filter(([, r]) => r.length > 0);
+    };
 
-    for (const inv of invoices) {
-      const key = inv.project?.projectGroup ?? 'Unassigned';
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key)!.push(inv);
-    }
-
-    // Remove empty groups (except we still show the summary row)
-    const activeGroups = [...grouped.entries()].filter(([, rows]) => rows.length > 0);
+    const approvedGroups = buildGroups(invoices.filter(i => i.status === 'Approved'));
+    const paidGroups     = buildGroups(invoices.filter(i => i.status === 'Paid'));
 
     // ── Build PDF ─────────────────────────────────────────────
     const doc = await PDFDocument.create();
@@ -84,11 +84,10 @@ export async function GET() {
 
     // Column x positions and widths
     const col = {
-      vendor:  { x: margin,            w: 115 },
-      inv:     { x: margin + 115,      w: 65  },
-      project: { x: margin + 180,      w: 130 },
-      date:    { x: margin + 310,      w: 72  },
-      status:  { x: margin + 382,      w: 60  },
+      vendor:  { x: margin,            w: 130 },
+      inv:     { x: margin + 130,      w: 72  },
+      project: { x: margin + 202,      w: 148 },
+      date:    { x: margin + 350,      w: 82  },
       amount:  { x: margin + contentWidth, w: 0 }, // right-aligned to edge
     };
 
@@ -141,13 +140,21 @@ export async function GET() {
     hline(y, margin, pageWidth - margin, 1.5, teal);
     y -= 20;
 
+    const grey = rgb(0.4, 0.4, 0.4);
+
+    const approvedTotal = approvedGroups.reduce((s, [, r]) => s + r.reduce((a, i) => a + i.amount, 0), 0);
+    const approvedCount = approvedGroups.reduce((s, [, r]) => s + r.length, 0);
+    const paidTotal     = paidGroups.reduce((s, [, r]) => s + r.reduce((a, i) => a + i.amount, 0), 0);
+    const paidCount     = paidGroups.reduce((s, [, r]) => s + r.length, 0);
+    const grandTotal    = approvedTotal + paidTotal;
+    const grandCount    = approvedCount + paidCount;
+
     // ── Summary table ─────────────────────────────────────────
     draw('SUMMARY', margin, y, { bold: true, size: 9, color: muted });
     y -= 6;
     hline(y);
     y -= 14;
 
-    // Summary header row
     draw('Group', margin, y, { bold: true, size: 8, color: muted });
     draw('Invoices', margin + 120, y, { bold: true, size: 8, color: muted });
     draw('Total', pageWidth - margin, y, { bold: true, size: 8, color: muted, right: true });
@@ -155,80 +162,101 @@ export async function GET() {
     hline(y);
     y -= 12;
 
-    let grandTotal = 0;
-    let grandCount = 0;
-
-    for (const [group, rows] of activeGroups) {
-      const subtotal = rows.reduce((s, r) => s + r.amount, 0);
-      grandTotal += subtotal;
-      grandCount += rows.length;
-
-      draw(group, margin, y, { size: 9 });
+    // Approved sub-header
+    draw('APPROVED — AWAITING PAYMENT', margin, y, { bold: true, size: 8, color: teal });
+    y -= 11;
+    for (const [group, rows] of approvedGroups) {
+      draw(group, margin + 8, y, { size: 9 });
       draw(String(rows.length), margin + 120, y, { size: 9, color: muted });
-      draw(formatCurrency(subtotal), pageWidth - margin, y, { size: 9, right: true });
-      y -= 14;
+      draw(formatCurrency(rows.reduce((s, r) => s + r.amount, 0)), pageWidth - margin, y, { size: 9, right: true });
+      y -= 13;
     }
+    draw('Approved Total', margin, y, { bold: true, size: 9 });
+    draw(String(approvedCount), margin + 120, y, { bold: true, size: 9 });
+    draw(formatCurrency(approvedTotal), pageWidth - margin, y, { bold: true, size: 9, color: teal, right: true });
+    y -= 16;
 
-    y -= 2;
+    // Paid sub-header
+    draw('PAID', margin, y, { bold: true, size: 8, color: grey });
+    y -= 11;
+    for (const [group, rows] of paidGroups) {
+      draw(group, margin + 8, y, { size: 9, color: muted });
+      draw(String(rows.length), margin + 120, y, { size: 9, color: muted });
+      draw(formatCurrency(rows.reduce((s, r) => s + r.amount, 0)), pageWidth - margin, y, { size: 9, color: muted, right: true });
+      y -= 13;
+    }
+    draw('Paid Total', margin, y, { bold: true, size: 9, color: muted });
+    draw(String(paidCount), margin + 120, y, { bold: true, size: 9, color: muted });
+    draw(formatCurrency(paidTotal), pageWidth - margin, y, { bold: true, size: 9, color: muted, right: true });
+    y -= 16;
+
     hline(y, margin, pageWidth - margin, 0.75, rgb(0.7, 0.7, 0.7));
     y -= 12;
-    draw('TOTAL', margin, y, { bold: true, size: 9 });
+    draw('GRAND TOTAL', margin, y, { bold: true, size: 9 });
     draw(String(grandCount), margin + 120, y, { bold: true, size: 9 });
     draw(formatCurrency(grandTotal), pageWidth - margin, y, { bold: true, size: 11, color: teal, right: true });
     y -= 28;
 
-    // ── Detail sections (one page per group) ─────────────────
-    for (const [group, rows] of activeGroups) {
-      const subtotal = rows.reduce((s, r) => s + r.amount, 0);
+    // ── Helper to render a set of groups ─────────────────────
+    const drawGroups = (groups: [string, typeof invoices][], sectionColor: ReturnType<typeof rgb>) => {
+      for (const [group, rows] of groups) {
+        const subtotal = rows.reduce((s, r) => s + r.amount, 0);
 
-      // Always start each group on a fresh page
+        page = doc.addPage([pageWidth, pageHeight]);
+        y = pageHeight - margin;
+
+        draw(group.toUpperCase(), margin, y, { bold: true, size: 14, color: sectionColor });
+        y -= 8;
+        hline(y, margin, pageWidth - margin, 1.5, sectionColor);
+        y -= 20;
+
+        draw('Vendor',    col.vendor.x,  y, { bold: true, size: 8, color: muted });
+        draw('Invoice #', col.inv.x,     y, { bold: true, size: 8, color: muted });
+        draw('Project',   col.project.x, y, { bold: true, size: 8, color: muted });
+        draw('Date',      col.date.x,    y, { bold: true, size: 8, color: muted });
+        draw('Amount',    col.amount.x,  y, { bold: true, size: 8, color: muted, right: true });
+        y -= 5;
+        hline(y);
+        y -= 13;
+
+        for (const inv of rows) {
+          ensureSpace(16);
+          draw(inv.vendorName ?? '',       col.vendor.x,  y, { size: 9, maxW: col.vendor.w - 4, color: sectionColor === grey ? muted : dark });
+          draw(inv.invoiceNumber ?? '-',   col.inv.x,     y, { size: 9, maxW: col.inv.w - 4,    color: sectionColor === grey ? muted : dark });
+          draw(inv.project?.name ?? '-',   col.project.x, y, { size: 9, maxW: col.project.w - 4, color: sectionColor === grey ? muted : dark });
+          draw(formatDate(inv.date),       col.date.x,    y, { size: 9, maxW: col.date.w - 4,   color: sectionColor === grey ? muted : dark });
+          draw(formatCurrency(inv.amount), col.amount.x,  y, { size: 9, right: true,             color: sectionColor === grey ? muted : dark });
+          y -= 13;
+          hline(y, margin, pageWidth - margin, 0.3, rgb(0.94, 0.94, 0.94));
+          y -= 2;
+        }
+
+        ensureSpace(20);
+        y -= 4;
+        hline(y, margin, pageWidth - margin, 0.75, rgb(0.7, 0.7, 0.7));
+        y -= 12;
+        draw(`${group} Subtotal`, margin, y, { bold: true, size: 9, color: sectionColor === grey ? muted : dark });
+        draw(`${rows.length} invoice${rows.length !== 1 ? 's' : ''}`, col.inv.x, y, { size: 8, color: muted });
+        draw(formatCurrency(subtotal), col.amount.x, y, { bold: true, size: 10, color: sectionColor, right: true });
+        y -= 24;
+      }
+    };
+
+    // ── Approved detail pages ─────────────────────────────────
+    if (approvedGroups.length > 0) drawGroups(approvedGroups, teal);
+
+    // ── Paid detail pages ─────────────────────────────────────
+    if (paidGroups.length > 0) {
+      // Section divider page for Paid
       page = doc.addPage([pageWidth, pageHeight]);
       y = pageHeight - margin;
-
-      // Group header
-      draw(group.toUpperCase(), margin, y, { bold: true, size: 14, color: teal });
+      draw('PAID INVOICES', margin, y, { bold: true, size: 16, color: grey });
       y -= 8;
-      hline(y, margin, pageWidth - margin, 1.5, teal);
-      y -= 20;
-
-      // Column header row
-      draw('Vendor',     col.vendor.x,  y, { bold: true, size: 8, color: muted });
-      draw('Invoice #',  col.inv.x,     y, { bold: true, size: 8, color: muted });
-      draw('Project',    col.project.x, y, { bold: true, size: 8, color: muted });
-      draw('Date',       col.date.x,    y, { bold: true, size: 8, color: muted });
-      draw('Status',     col.status.x,  y, { bold: true, size: 8, color: muted });
-      draw('Amount',     col.amount.x,  y, { bold: true, size: 8, color: muted, right: true });
-      y -= 5;
-      hline(y);
-      y -= 13;
-
-      // Invoice rows
-      for (const inv of rows) {
-        ensureSpace(16);
-
-        draw(inv.vendorName ?? '',           col.vendor.x,  y, { size: 9, maxW: col.vendor.w - 4 });
-        draw(inv.invoiceNumber ?? '-',       col.inv.x,     y, { size: 9, maxW: col.inv.w - 4 });
-        draw(inv.project?.name ?? '-',       col.project.x, y, { size: 9, maxW: col.project.w - 4 });
-        draw(formatDate(inv.date),           col.date.x,    y, { size: 9, maxW: col.date.w - 4 });
-        draw(inv.status,                     col.status.x,  y, { size: 9, maxW: col.status.w - 4, color: inv.status === 'Paid' ? muted : dark });
-        draw(formatCurrency(inv.amount),     col.amount.x,  y, { size: 9, right: true });
-        y -= 13;
-        hline(y, margin, pageWidth - margin, 0.3, rgb(0.94, 0.94, 0.94));
-        y -= 2;
-      }
-
-      // Subtotal row
-      ensureSpace(20);
-      y -= 4;
-      hline(y, margin, pageWidth - margin, 0.75, rgb(0.7, 0.7, 0.7));
-      y -= 12;
-      draw(`${group} Subtotal`, margin, y, { bold: true, size: 9 });
-      draw(`${rows.length} invoice${rows.length !== 1 ? 's' : ''}`, col.inv.x, y, { size: 8, color: muted });
-      draw(formatCurrency(subtotal), col.amount.x, y, { bold: true, size: 10, color: teal, right: true });
-      y -= 24;
+      hline(y, margin, pageWidth - margin, 1.5, grey);
+      drawGroups(paidGroups, grey);
     }
 
-    // ── Grand total — bottom of the last group's page ────────
+    // ── Grand total ───────────────────────────────────────────
     ensureSpace(40);
     y -= 8;
     hline(y, margin, pageWidth - margin, 1.5, teal);
