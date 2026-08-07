@@ -69,6 +69,7 @@ export function InvoiceList({
   const [lineItemFilter, setLineItemFilter] = useState<string>(initialLineItemFilter);
   const [filtersOpen, setFiltersOpen] = useState(!!initialLineItemFilter);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isPdfExporting, setIsPdfExporting] = useState(false);
   const [viewOverrideStatus, setViewOverrideStatus] = useState("");
   const [viewShowOverride, setViewShowOverride] = useState(false);
   const { toast } = useToast();
@@ -244,6 +245,50 @@ export function InvoiceList({
       });
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!filteredInvoices.length) return;
+    setIsPdfExporting(true);
+    try {
+      // Build a human-readable label describing the current filters
+      const parts: string[] = [];
+      if (statusFilter !== "All") parts.push(`Status: ${statusFilter}`);
+      if (groupFilter !== "All") parts.push(`Group: ${groupFilter}`);
+      if (vendorFilter) parts.push(`Vendor: ${vendorFilter}`);
+
+      const res = await fetch("/api/invoices/approved-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ids: filteredInvoices.map((inv) => inv.id),
+          label: parts.join("  |  "),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error || "Failed to generate PDF");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const datePart = new Date().toISOString().slice(0, 10);
+      const nameParts = ["Invoices"];
+      if (statusFilter !== "All") nameParts.push(statusFilter);
+      if (groupFilter !== "All") nameParts.push(groupFilter.replace(/\s+/g, "-"));
+      a.download = `${nameParts.join("_")}_${datePart}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({
+        title: "Export failed",
+        description: err instanceof Error ? err.message : "Failed to export PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPdfExporting(false);
     }
   };
 
@@ -448,17 +493,17 @@ export function InvoiceList({
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Invoices</h2>
         <div className="flex items-center gap-2">
-          {showProject && (
-            <a
-              href="/api/invoices/approved-report"
-              download={`ApprovedInvoices_${new Date().toISOString().slice(0, 10)}.pdf`}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-              title="Download a PDF report of all approved, unpaid invoices grouped by entity"
-            >
-              <ClipboardList className="h-4 w-4" />
-              Approved Report
-            </a>
-          )}
+          <button
+            onClick={handleExportPdf}
+            disabled={isPdfExporting || filteredInvoices.length === 0}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={`Export current view to PDF (${filteredInvoices.length} invoice${filteredInvoices.length !== 1 ? "s" : ""})`}
+          >
+            {isPdfExporting
+              ? <LoaderCircle className="h-4 w-4 animate-spin" />
+              : <ClipboardList className="h-4 w-4" />}
+            Export PDF
+          </button>
           {canEdit && (
             <>
               <Button variant="outline" onClick={() => setPayAppOpen(true)}>
