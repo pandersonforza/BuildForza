@@ -67,6 +67,7 @@ export function InvoiceList({
   const [groupFilter, setGroupFilter] = useState<string>("All");
   const [vendorFilter, setVendorFilter] = useState<string>("");
   const [lineItemFilter, setLineItemFilter] = useState<string>(initialLineItemFilter);
+  const [unsentFilter, setUnsentFilter] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(!!initialLineItemFilter);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPdfExporting, setIsPdfExporting] = useState(false);
@@ -198,6 +199,7 @@ export function InvoiceList({
     groupFilter !== "All",
     vendorFilter !== "",
     lineItemFilter !== "",
+    unsentFilter,
   ].filter(Boolean).length;
 
   const filteredInvoices = useMemo(() => invoices.filter((inv) => {
@@ -205,8 +207,9 @@ export function InvoiceList({
     if (groupFilter !== "All" && inv.project?.projectGroup !== groupFilter) return false;
     if (vendorFilter && inv.vendorName !== vendorFilter) return false;
     if (lineItemFilter && inv.lineItem?.id !== lineItemFilter) return false;
+    if (unsentFilter && inv.sentToAccountant) return false;
     return true;
-  }), [invoices, statusFilter, groupFilter, vendorFilter, lineItemFilter]);
+  }), [invoices, statusFilter, groupFilter, vendorFilter, lineItemFilter, unsentFilter]);
 
   // Invoices in the current view that have a downloadable PDF
   const invoicesWithPdf = filteredInvoices.filter(
@@ -538,6 +541,16 @@ export function InvoiceList({
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setUnsentFilter((v) => !v)}
+            className={`px-3 py-1 text-sm font-medium rounded-md border transition-colors ${
+              unsentFilter
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-input text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            Not sent to acct.
+          </button>
           <Button
             variant="outline"
             size="sm"
@@ -556,7 +569,7 @@ export function InvoiceList({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { setStatusFilter("All"); setGroupFilter("All"); setVendorFilter(""); setLineItemFilter(""); }}
+              onClick={() => { setStatusFilter("All"); setGroupFilter("All"); setVendorFilter(""); setLineItemFilter(""); setUnsentFilter(false); }}
               className="gap-1 text-muted-foreground"
             >
               <X className="h-3.5 w-3.5" />
