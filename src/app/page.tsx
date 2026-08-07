@@ -317,11 +317,6 @@ export default function LandingPage() {
                 desc: "Compare original, revised, committed, and actual costs line by line. See variance and progress at a glance.",
               },
               {
-                icon: Layers,
-                title: "Draw Management",
-                desc: "Build and submit draw requests, attach invoices, and generate lender-ready PDF reports automatically.",
-              },
-              {
                 icon: Receipt,
                 title: "AI Invoice Parsing",
                 desc: "Upload PDFs and let AI extract vendor, amount, date, and suggest the right project and line item.",
