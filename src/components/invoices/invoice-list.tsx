@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
-import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, LoaderCircle, ClipboardList } from "lucide-react";
+import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHorizontal, X, Archive, LoaderCircle, ClipboardList, CheckSquare, Square } from "lucide-react";
 import { SelectNative } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { InvoiceApprovalDialog } from "@/components/invoices/invoice-approval-dialog";
@@ -156,6 +156,20 @@ export function InvoiceList({
         description: "Failed to mark invoice as paid",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleToggleSentToAccountant = async (invoiceId: string, current: boolean) => {
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sentToAccountant: !current }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      onMutate();
+    } catch {
+      toast({ title: "Error", description: "Failed to update sent-to-accountant status", variant: "destructive" });
     }
   };
 
@@ -322,6 +336,24 @@ export function InvoiceList({
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      id: "sentToAccountant",
+      header: () => <span className="text-xs whitespace-nowrap">Sent to Acct.</span>,
+      cell: ({ row }) => {
+        const sent = row.original.sentToAccountant;
+        return (
+          <button
+            title={sent ? "Mark as not sent" : "Mark as sent to accountant"}
+            onClick={() => handleToggleSentToAccountant(row.original.id, sent)}
+            className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {sent
+              ? <CheckSquare className="h-4 w-4 text-teal-500" />
+              : <Square className="h-4 w-4" />}
+          </button>
+        );
+      },
     },
     {
       id: "approver",

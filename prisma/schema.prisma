@@ -263,9 +263,10 @@ model Invoice {
   paidDate         DateTime?
   rejectionReason  String?
   drawRequestId    String?
-  aiConfidence     Float?
-  aiNotes          String?
-  createdAt        DateTime  @default(now())
+  aiConfidence      Float?
+  aiNotes           String?
+  sentToAccountant  Boolean   @default(false)
+  createdAt         DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   project         Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)

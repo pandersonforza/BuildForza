@@ -251,6 +251,19 @@ export async function PUT(
 
     }
 
+    // Allow sentToAccountant toggle regardless of status
+    if (body.sentToAccountant !== undefined && Object.keys(body).length === 1) {
+      const invoice = await prisma.invoice.update({
+        where: { id },
+        data: { sentToAccountant: body.sentToAccountant },
+        include: {
+          project: true,
+          lineItem: { include: { category: true } },
+        },
+      });
+      return NextResponse.json(invoice);
+    }
+
     // Allow drawRequestId updates regardless of status (for linking/unlinking from draws)
     if (body.drawRequestId !== undefined && Object.keys(body).length === 1) {
       const invoice = await prisma.invoice.update({
