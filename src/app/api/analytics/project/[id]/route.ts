@@ -22,12 +22,6 @@ export async function GET(
           },
           orderBy: { createdAt: 'desc' },
         },
-        drawRequests: {
-          include: {
-            lineItems: true,
-          },
-          orderBy: { drawNumber: 'asc' },
-        },
         invoices: {
           where: {
             status: { in: ['Approved', 'Paid'] },
@@ -109,28 +103,6 @@ export async function GET(
       a.group.localeCompare(b.group)
     );
 
-    // Draw history with cumulative totals
-    let cumulativeAmount = 0;
-    const drawHistory = project.drawRequests.map((draw) => {
-      const drawTotal = draw.lineItems.reduce(
-        (sum, item) => sum + item.thisDrawAmount,
-        0
-      );
-      cumulativeAmount += draw.status === 'Funded' ? drawTotal : 0;
-
-      return {
-        id: draw.id,
-        drawNumber: draw.drawNumber,
-        status: draw.status,
-        totalAmount: draw.totalAmount,
-        submittedDate: draw.submittedDate,
-        approvedDate: draw.approvedDate,
-        fundedDate: draw.fundedDate,
-        cumulativeFunded: cumulativeAmount,
-        lineItemCount: draw.lineItems.length,
-      };
-    });
-
     // Sort variance by most over-budget first
     varianceByLineItem.sort((a, b) => a.variance - b.variance);
 
@@ -189,15 +161,6 @@ export async function GET(
       percentComplete: Math.round(percentComplete * 100) / 100,
     };
 
-    // Recent draws (last 5)
-    const recentDraws = project.drawRequests.slice(-5).reverse().map((draw) => ({
-      id: draw.id,
-      drawNumber: draw.drawNumber,
-      status: draw.status,
-      totalAmount: draw.totalAmount,
-      createdAt: draw.createdAt,
-    }));
-
     // Recent contracts (last 5)
     const recentContracts = project.contracts.slice(0, 5).map((contract) => ({
       id: contract.id,
@@ -218,8 +181,6 @@ export async function GET(
       budgetSummary,
       categorySummaries,
       budgetByCategory,
-      drawHistory,
-      recentDraws,
       recentContracts,
       varianceByLineItem,
     });

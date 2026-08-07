@@ -60,13 +60,6 @@ interface ProjectAnalyticsData {
     variancePercent: number;
     lineItemCount: number;
   }>;
-  recentDraws: Array<{
-    id: string;
-    drawNumber: number;
-    status: string;
-    totalAmount: number;
-    createdAt: string;
-  }>;
   recentContracts: Array<{
     id: string;
     title: string;

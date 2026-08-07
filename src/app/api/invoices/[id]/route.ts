@@ -264,18 +264,6 @@ export async function PUT(
       return NextResponse.json(invoice);
     }
 
-    // Allow drawRequestId updates regardless of status (for linking/unlinking from draws)
-    if (body.drawRequestId !== undefined && Object.keys(body).length === 1) {
-      const invoice = await prisma.invoice.update({
-        where: { id },
-        data: { drawRequestId: body.drawRequestId },
-        include: {
-          project: true,
-          lineItem: { include: { category: true } },
-        },
-      });
-      return NextResponse.json(invoice);
-    }
 
     // Regular field updates — only allowed in "Submitted" status
     if (existing.status !== 'Submitted') {

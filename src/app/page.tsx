@@ -6,7 +6,6 @@ import { Logo } from "@/components/ui/logo";
 import {
   BarChart3,
   FileText,
-  Layers,
   Receipt,
   CheckCircle2,
   TrendingUp,
@@ -208,66 +207,12 @@ function InvoicesMockup() {
   );
 }
 
-function DrawsMockup() {
-  const draws = [
-    { number: "Draw #4", amount: "$287,450", submitted: "Jun 14", status: "Approved", invoices: 12 },
-    { number: "Draw #3", amount: "$341,200", submitted: "May 2", status: "Paid", invoices: 18 },
-    { number: "Draw #2", amount: "$198,750", submitted: "Mar 28", status: "Paid", invoices: 9 },
-    { number: "Draw #1", amount: "$124,300", submitted: "Feb 10", status: "Paid", invoices: 6 },
-  ];
-  return (
-    <MockWindow title="PropHound — Draw Requests">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-[#e8edf2]">Riverside Commons — Draws</h2>
-          <div className="h-7 px-3 rounded-md bg-[#2a9a9a] flex items-center text-[11px] font-medium text-white">+ New Draw</div>
-        </div>
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {[
-            { label: "Total Drawn", val: "$951,700" },
-            { label: "This Draw", val: "$287,450" },
-            { label: "Remaining Budget", val: "$703,300" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-lg border border-[#2a3540] bg-[#151c23] p-3">
-              <div className="text-[10px] text-[#8899a6]">{s.label}</div>
-              <div className="text-sm font-bold text-[#2a9a9a] mt-0.5">{s.val}</div>
-            </div>
-          ))}
-        </div>
-        <table className="w-full text-[11px]">
-          <thead>
-            <tr className="border-b border-[#2a3540] text-[#8899a6]">
-              <th className="text-left pb-2 pr-4">Draw</th>
-              <th className="text-right pb-2 pr-4">Amount</th>
-              <th className="text-left pb-2 pr-4">Submitted</th>
-              <th className="text-center pb-2 pr-4">Invoices</th>
-              <th className="text-left pb-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {draws.map((d) => (
-              <tr key={d.number} className="border-b border-[#2a3540]/50 text-[#e8edf2]">
-                <td className="py-2 pr-4 font-medium">{d.number}</td>
-                <td className="py-2 pr-4 text-right font-mono">{d.amount}</td>
-                <td className="py-2 pr-4 text-[#8899a6]">{d.submitted}</td>
-                <td className="py-2 pr-4 text-center text-[#8899a6]">{d.invoices}</td>
-                <td className="py-2"><StatusBadge status={d.status} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </MockWindow>
-  );
-}
-
 // ── Feature tabs ─────────────────────────────────────────────────────────────
 
 const TABS = [
   { id: "projects", label: "Projects", icon: Building2, mockup: ProjectsMockup },
   { id: "budget",   label: "Budget",   icon: BarChart3,  mockup: BudgetMockup  },
   { id: "invoices", label: "Invoices", icon: Receipt,    mockup: InvoicesMockup },
-  { id: "draws",    label: "Draws",    icon: Layers,     mockup: DrawsMockup   },
 ];
 
 function FeatureTabs() {

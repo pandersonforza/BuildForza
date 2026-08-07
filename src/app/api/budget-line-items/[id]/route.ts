@@ -14,14 +14,6 @@ export async function GET(
         category: {
           select: { id: true, name: true, categoryGroup: true, projectId: true },
         },
-        drawLineItems: {
-          select: {
-            id: true,
-            thisDrawAmount: true,
-            previousDraws: true,
-            drawRequest: { select: { id: true, drawNumber: true, status: true } },
-          },
-        },
       },
     });
 

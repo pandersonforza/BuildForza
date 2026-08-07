@@ -13,7 +13,6 @@ const KNOWN_SEGMENTS: Record<string, string> = {
   projects: "Projects",
   reports: "Reports",
   budget: "Budget",
-  draws: "Draws",
   contracts: "Contracts",
   documents: "Documents",
   milestones: "Milestones",

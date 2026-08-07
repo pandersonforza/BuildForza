@@ -113,7 +113,6 @@ export async function GET(request: NextRequest) {
       projectCount: projects.length,
       activeProjects,
       completedThisYear,
-      totalDrawsFunded: 0,
       budgetVariance: totalBudget - totalSpent,
       budgetVariancePercent: totalBudget > 0 ? ((totalBudget - totalSpent) / totalBudget) * 100 : 0,
       projectsByStatus,

@@ -146,12 +146,6 @@ export const LINE_ITEM_ORDER: Record<string, string[]> = {
   ],
 };
 
-export const DRAW_STATUSES = [
-  "Draft",
-  "Submitted",
-  "Approved",
-  "Funded",
-] as const;
 
 export const DOCUMENT_CATEGORIES = [
   "Contracts",

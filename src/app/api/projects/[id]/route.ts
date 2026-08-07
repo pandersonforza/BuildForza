@@ -28,12 +28,6 @@ export async function GET(
             vendor: { select: { id: true, name: true, company: true } },
           },
         },
-        drawRequests: {
-          include: {
-            lineItems: true,
-          },
-          orderBy: { drawNumber: 'asc' },
-        },
       },
     });
 

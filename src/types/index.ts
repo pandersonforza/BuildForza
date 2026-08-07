@@ -4,8 +4,6 @@ import type {
   BudgetLineItem,
   Vendor,
   Contract,
-  DrawRequest,
-  DrawLineItem,
   Document,
   Invoice,
   User,
@@ -18,8 +16,6 @@ export type {
   BudgetLineItem,
   Vendor,
   Contract,
-  DrawRequest,
-  DrawLineItem,
   Document,
   Invoice,
   User,
@@ -53,13 +49,6 @@ export type BudgetCategoryWithLineItems = BudgetCategory & {
   lineItems: BudgetLineItem[];
 };
 
-export type DrawLineItemWithBudget = DrawLineItem & {
-  budgetLineItem: BudgetLineItem;
-};
-
-export type DrawRequestWithLineItems = DrawRequest & {
-  lineItems: DrawLineItemWithBudget[];
-};
 
 export interface PortfolioKPIs {
   totalProjects: number;
@@ -67,7 +56,6 @@ export interface PortfolioKPIs {
   totalBudget: number;
   totalCommitted: number;
   totalActualCost: number;
-  totalDrawsFunded: number;
   budgetVariance: number;
   budgetVariancePercent: number;
   monthlyPaid?: number;

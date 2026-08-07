@@ -92,37 +92,6 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Draws */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Recent Draws
-              <Link
-                href={`/projects/${projectId}/draws`}
-                className="text-sm font-normal text-primary hover:underline"
-              >
-                View All
-              </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {analytics?.recentDraws && analytics.recentDraws.length > 0 ? (
-              <div className="space-y-3">
-                {analytics.recentDraws.slice(0, 5).map((draw) => (
-                  <div key={draw.id} className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium">Draw #{draw.drawNumber}</span>
-                      <StatusBadge status={draw.status} className="ml-2" />
-                    </div>
-                    <CurrencyDisplay amount={draw.totalAmount} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">No draws yet.</p>
-            )}
-          </CardContent>
-        </Card>
 
       </div>
 
