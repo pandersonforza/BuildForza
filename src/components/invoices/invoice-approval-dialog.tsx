@@ -225,24 +225,24 @@ export function InvoiceApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-5 pb-4 shrink-0 border-b border-border">
           <DialogTitle>Review {isPayApp ? "Pay Application" : "Invoice"}</DialogTitle>
           <DialogDescription>
             Review the details below and approve or reject.
           </DialogDescription>
         </DialogHeader>
 
-        <div className={`grid gap-6 ${pdfUrl ? "grid-cols-2" : ""} overflow-hidden`}>
+        <div className={`flex-1 overflow-hidden ${pdfUrl ? "grid grid-cols-[3fr_2fr]" : "flex flex-col"}`}>
           {/* PDF preview — left */}
           {pdfUrl && (
-            <div className="border border-border rounded-lg overflow-hidden h-[60vh]">
+            <div className="border-r border-border overflow-hidden">
               <iframe src={pdfUrl} className="w-full h-full" title="Invoice PDF Preview" />
             </div>
           )}
 
           {/* Details — right */}
-          <div className="overflow-y-auto max-h-[60vh] pr-1 space-y-4">
+          <div className="overflow-y-auto p-6 space-y-4">
             {/* Duplicate warning */}
             {duplicates.length > 0 && (
               <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 flex gap-2">
@@ -368,7 +368,7 @@ export function InvoiceApprovalDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex items-center gap-2">
+        <DialogFooter className="flex items-center gap-2 px-6 py-4 shrink-0 border-t border-border">
           <div className="flex items-center gap-2 mr-auto">
             {pdfUrl && (
               <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
