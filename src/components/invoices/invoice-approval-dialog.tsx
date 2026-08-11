@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/toast";
 import { SearchableSelect, SelectNative } from "@/components/ui/select";
 import { ExternalLink, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import type { InvoiceWithRelations } from "@/types";
 
 export interface InvoiceForApproval {
   id: string;
@@ -38,7 +39,7 @@ interface InvoiceApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice: InvoiceForApproval | null;
-  onSuccess: () => void;
+  onSuccess: (updated?: InvoiceWithRelations) => void;
 }
 
 export function InvoiceApprovalDialog({
@@ -148,9 +149,10 @@ export function InvoiceApprovalDialog({
         const err = await res.json();
         throw new Error(err.error || "Failed to approve");
       }
+      const updated = await res.json() as unknown as InvoiceWithRelations;
       toast({ title: "Invoice Approved", description: `Invoice from ${form.vendorName} has been approved.` });
       handleClose();
-      onSuccess();
+      onSuccess(updated);
     } catch (error) {
       toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to approve invoice", variant: "destructive" });
     } finally {
@@ -174,9 +176,10 @@ export function InvoiceApprovalDialog({
         const err = await res.json();
         throw new Error(err.error || "Failed to reject");
       }
+      const updated = await res.json() as unknown as InvoiceWithRelations;
       toast({ title: "Invoice Rejected", description: `Invoice has been rejected.` });
       handleClose();
-      onSuccess();
+      onSuccess(updated);
     } catch (error) {
       toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to reject invoice", variant: "destructive" });
     } finally {
@@ -197,9 +200,10 @@ export function InvoiceApprovalDialog({
         const err = await res.json();
         throw new Error(err.error || "Failed to update status");
       }
+      const updated = await res.json() as unknown as InvoiceWithRelations;
       toast({ title: "Status updated", description: `Invoice moved to "${overrideStatus}".` });
       handleClose();
-      onSuccess();
+      onSuccess(updated);
     } catch (error) {
       toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to update status", variant: "destructive" });
     } finally {

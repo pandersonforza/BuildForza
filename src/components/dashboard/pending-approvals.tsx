@@ -136,9 +136,11 @@ export function PendingApprovals() {
         open={!!reviewingInvoice}
         onOpenChange={(o) => { if (!o) setReviewingInvoice(null); }}
         invoice={reviewingInvoice}
-        onSuccess={() => {
+        onSuccess={(updated) => {
+          const id = updated?.id ?? reviewingInvoice?.id;
           setReviewingInvoice(null);
-          fetchInvoices();
+          if (id) setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+          else fetchInvoices();
         }}
       />
     </>

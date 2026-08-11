@@ -41,7 +41,9 @@ export async function GET(request: NextRequest) {
       include: {
         project: { select: { id: true, name: true, address: true, status: true, projectGroup: true } },
         lineItem: {
-          include: {
+          select: {
+            id: true,
+            description: true,
             category: { select: { id: true, name: true, categoryGroup: true } },
           },
         },
@@ -129,10 +131,12 @@ export async function POST(request: NextRequest) {
         submittedDate: body.submittedDate ? new Date(body.submittedDate) : null,
       },
       include: {
-        project: true,
+        project: { select: { id: true, name: true, address: true, status: true, projectGroup: true } },
         lineItem: {
-          include: {
-            category: true,
+          select: {
+            id: true,
+            description: true,
+            category: { select: { id: true, name: true, categoryGroup: true } },
           },
         },
       },

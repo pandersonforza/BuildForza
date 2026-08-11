@@ -7,6 +7,19 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   'Approved': ['Paid'],
 };
 
+// Slim include used on every PUT response — only the fields the client actually renders.
+// (Full project/lineItem objects add ~15 unused fields per invoice.)
+const INVOICE_INCLUDE = {
+  project: { select: { id: true, name: true, address: true, status: true, projectGroup: true } },
+  lineItem: {
+    select: {
+      id: true,
+      description: true,
+      category: { select: { id: true, name: true, categoryGroup: true } },
+    },
+  },
+} as const;
+
 const TERMINAL_STATUSES = ['Paid', 'Rejected'];
 
 export async function GET(
@@ -18,14 +31,7 @@ export async function GET(
 
     const invoice = await prisma.invoice.findUnique({
       where: { id },
-      include: {
-        project: true,
-        lineItem: {
-          include: {
-            category: true,
-          },
-        },
-      },
+      include: INVOICE_INCLUDE,
     });
 
     if (!invoice) {
@@ -80,14 +86,16 @@ export async function PUT(
             if (match) {
               try {
                 const payAppItems: { lineItemId: string; amount: number }[] = JSON.parse(match[1]);
-                for (const item of payAppItems) {
-                  if (item.lineItemId && item.amount !== 0) {
-                    await tx.budgetLineItem.update({
-                      where: { id: item.lineItemId },
-                      data: { actualCost: { decrement: item.amount } },
-                    });
-                  }
-                }
+                await Promise.all(
+                  payAppItems
+                    .filter((item) => item.lineItemId && item.amount !== 0)
+                    .map((item) =>
+                      tx.budgetLineItem.update({
+                        where: { id: item.lineItemId },
+                        data: { actualCost: { decrement: item.amount } },
+                      })
+                    )
+                );
               } catch { /* skip */ }
             }
           } else if (existing.budgetLineItemId) {
@@ -107,10 +115,7 @@ export async function PUT(
             ...(body.status !== 'Approved' && body.status !== 'Paid' && { approvedDate: null }),
             ...(body.status !== 'Paid' && { paidDate: null }),
           },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
+          include: INVOICE_INCLUDE,
         });
       });
 
@@ -166,10 +171,7 @@ export async function PUT(
               ...(body.description !== undefined && { description: body.description }),
               ...(body.budgetLineItemId !== undefined && { budgetLineItemId: body.budgetLineItemId }),
             },
-            include: {
-              project: true,
-              lineItem: { include: { category: true } },
-            },
+            include: INVOICE_INCLUDE,
           });
 
           if (isPayApp && existing.aiNotes) {
@@ -178,14 +180,16 @@ export async function PUT(
             if (match) {
               try {
                 const payAppItems: { lineItemId: string; amount: number }[] = JSON.parse(match[1]);
-                for (const item of payAppItems) {
-                  if (item.lineItemId && item.amount !== 0) {
-                    await tx.budgetLineItem.update({
-                      where: { id: item.lineItemId },
-                      data: { actualCost: { increment: item.amount } },
-                    });
-                  }
-                }
+                await Promise.all(
+                  payAppItems
+                    .filter((item) => item.lineItemId && item.amount !== 0)
+                    .map((item) =>
+                      tx.budgetLineItem.update({
+                        where: { id: item.lineItemId },
+                        data: { actualCost: { increment: item.amount } },
+                      })
+                    )
+                );
               } catch {
                 // If parsing fails, skip distribution
                 console.error('Failed to parse pay app line items');
@@ -222,10 +226,7 @@ export async function PUT(
             status: 'Paid',
             paidDate: new Date(),
           },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
+          include: INVOICE_INCLUDE,
         });
 
         return NextResponse.json(invoice);
@@ -240,10 +241,7 @@ export async function PUT(
             rejectedDate: new Date(),
             ...(body.rejectionReason !== undefined && { rejectionReason: body.rejectionReason }),
           },
-          include: {
-            project: true,
-            lineItem: { include: { category: true } },
-          },
+          include: INVOICE_INCLUDE,
         });
 
         return NextResponse.json(invoice);
@@ -256,10 +254,7 @@ export async function PUT(
       const invoice = await prisma.invoice.update({
         where: { id },
         data: { sentToAccountant: body.sentToAccountant },
-        include: {
-          project: true,
-          lineItem: { include: { category: true } },
-        },
+        include: INVOICE_INCLUDE,
       });
       return NextResponse.json(invoice);
     }
@@ -309,14 +304,7 @@ export async function PUT(
         ...(body.aiConfidence !== undefined && { aiConfidence: body.aiConfidence }),
         ...(body.aiNotes !== undefined && { aiNotes: body.aiNotes }),
       },
-      include: {
-        project: true,
-        lineItem: {
-          include: {
-            category: true,
-          },
-        },
-      },
+      include: INVOICE_INCLUDE,
     });
 
     return NextResponse.json(invoice);

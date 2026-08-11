@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/shared/data-table";
@@ -57,6 +57,7 @@ export function InvoiceList({
   projectId,
   initialLineItemFilter = "",
 }: InvoiceListProps) {
+  const [localInvoices, setLocalInvoices] = useState<InvoiceWithRelations[]>(invoices);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [payAppOpen, setPayAppOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -77,6 +78,14 @@ export function InvoiceList({
   const { user, canEdit, canMarkPaid } = useAuth();
   const isAdmin = user?.role === "admin";
 
+  // Sync local copy when parent refetches (e.g. after upload/delete)
+  useEffect(() => { setLocalInvoices(invoices); }, [invoices]);
+
+  // Optimistic patch — avoids a full collection refetch for single-invoice mutations
+  const patchInvoice = useCallback((updated: InvoiceWithRelations) => {
+    setLocalInvoices((prev) => prev.map((inv) => (inv.id === updated.id ? { ...inv, ...updated } : inv)));
+  }, []);
+
   const handleViewStatusOverride = async () => {
     if (!viewingInvoice || !viewOverrideStatus) return;
     try {
@@ -89,11 +98,12 @@ export function InvoiceList({
         const err = await res.json();
         throw new Error(err.error || "Failed to update status");
       }
+      const updated = await res.json() as unknown as InvoiceWithRelations;
       toast({ title: "Status updated", description: `Invoice moved to "${viewOverrideStatus}".` });
       setViewingInvoice(null);
       setViewShowOverride(false);
       setViewOverrideStatus("");
-      onMutate();
+      patchInvoice(updated);
     } catch (error) {
       toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to update status", variant: "destructive" });
     }
@@ -131,8 +141,9 @@ export function InvoiceList({
         body: JSON.stringify({ status: "Submitted" }),
       });
       if (!res.ok) throw new Error("Failed to submit invoice");
+      const updated = await res.json() as unknown as InvoiceWithRelations;
       toast({ title: "Invoice submitted for approval" });
-      onMutate();
+      patchInvoice(updated);
     } catch {
       toast({
         title: "Error",
@@ -150,8 +161,9 @@ export function InvoiceList({
         body: JSON.stringify({ status: "Paid" }),
       });
       if (!res.ok) throw new Error("Failed to mark as paid");
+      const updated = await res.json() as unknown as InvoiceWithRelations;
       toast({ title: "Invoice marked as paid" });
-      onMutate();
+      patchInvoice(updated);
     } catch {
       toast({
         title: "Error",
@@ -169,7 +181,8 @@ export function InvoiceList({
         body: JSON.stringify({ sentToAccountant: !current }),
       });
       if (!res.ok) throw new Error("Failed to update");
-      onMutate();
+      const updated = await res.json() as unknown as InvoiceWithRelations;
+      patchInvoice(updated);
     } catch {
       toast({ title: "Error", description: "Failed to update sent-to-accountant status", variant: "destructive" });
     }
@@ -177,21 +190,21 @@ export function InvoiceList({
 
   // Derive unique filter options from invoice data
   const uniqueStatuses = ["All", "Submitted", "Approved", "Paid"].filter(
-    (s) => s === "All" || invoices.some((i) => i.status === s)
+    (s) => s === "All" || localInvoices.some((i) => i.status === s)
   );
   const uniqueVendors = useMemo(
-    () => Array.from(new Set(invoices.map((i) => i.vendorName).filter(Boolean))).sort(),
-    [invoices]
+    () => Array.from(new Set(localInvoices.map((i) => i.vendorName).filter(Boolean))).sort(),
+    [localInvoices]
   );
   const uniqueLineItems = useMemo(
     () => Array.from(
       new Map(
-        invoices
+        localInvoices
           .filter((i) => i.lineItem)
           .map((i) => [`${i.lineItem!.category.name} — ${i.lineItem!.description}`, i.lineItem!.id])
       ).entries()
     ).sort(([a], [b]) => a.localeCompare(b)),
-    [invoices]
+    [localInvoices]
   );
 
   const activeFilterCount = [
@@ -202,14 +215,14 @@ export function InvoiceList({
     unsentFilter,
   ].filter(Boolean).length;
 
-  const filteredInvoices = useMemo(() => invoices.filter((inv) => {
+  const filteredInvoices = useMemo(() => localInvoices.filter((inv) => {
     if (statusFilter !== "All" && inv.status !== statusFilter) return false;
     if (groupFilter !== "All" && inv.project?.projectGroup !== groupFilter) return false;
     if (vendorFilter && inv.vendorName !== vendorFilter) return false;
     if (lineItemFilter && inv.lineItem?.id !== lineItemFilter) return false;
     if (unsentFilter && inv.sentToAccountant) return false;
     return true;
-  }), [invoices, statusFilter, groupFilter, vendorFilter, lineItemFilter, unsentFilter]);
+  }), [localInvoices, statusFilter, groupFilter, vendorFilter, lineItemFilter, unsentFilter]);
 
   // Invoices in the current view that have a downloadable PDF
   const invoicesWithPdf = filteredInvoices.filter(
@@ -679,9 +692,10 @@ export function InvoiceList({
         open={!!reviewingInvoice}
         onOpenChange={(o) => { if (!o) setReviewingInvoice(null); }}
         invoice={reviewingInvoice}
-        onSuccess={() => {
+        onSuccess={(updated) => {
           setReviewingInvoice(null);
-          onMutate();
+          if (updated) patchInvoice(updated);
+          else onMutate();
         }}
       />
 
