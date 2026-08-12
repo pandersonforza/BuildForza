@@ -24,7 +24,7 @@ import { Plus, ExternalLink, Trash2, DollarSign, FileText, FileDown, SlidersHori
 import { SelectNative } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { InvoiceApprovalDialog } from "@/components/invoices/invoice-approval-dialog";
-import { PROJECT_GROUPS } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 import type { InvoiceWithRelations } from "@/types";
 
 function getInvoicePdfUrl(
@@ -77,6 +77,7 @@ export function InvoiceList({
   const { toast } = useToast();
   const { user, canEdit, canMarkPaid } = useAuth();
   const isAdmin = user?.role === "admin";
+  const groups = useGroups();
 
   // Sync local copy when parent refetches (e.g. after upload/delete)
   useEffect(() => { setLocalInvoices(invoices); }, [invoices]);
@@ -611,7 +612,7 @@ export function InvoiceList({
         {/* Group pills — only on the global invoices page */}
         {showProject && (
           <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 w-fit">
-            {["All", ...PROJECT_GROUPS].map((g) => (
+            {["All", ...groups].map((g) => (
               <button
                 key={g}
                 onClick={() => setGroupFilter(g)}

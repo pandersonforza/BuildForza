@@ -9,7 +9,7 @@ import { PendingApprovals } from "@/components/dashboard/pending-approvals";
 import { ReturnedInvoices } from "@/components/dashboard/returned-invoices";
 import { CloseoutTasks } from "@/components/dashboard/closeout-tasks";
 import { useAuth } from "@/hooks/use-auth";
-import { PROJECT_GROUPS } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 
 // Lazy load chart-heavy components to reduce initial bundle
 const ProjectStatusChart = dynamic(
@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [stageFilter, setStageFilter] = useState<string | null>(null);
   const { data, isLoading, error } = usePortfolioAnalytics(groupFilter);
   const { canEdit } = useAuth();
+  const groups = useGroups();
 
   const handleStatusClick = (status: string) => {
     setStatusFilter((prev) => (prev === status ? null : status));
@@ -54,7 +55,7 @@ export default function DashboardPage() {
       <div className="flex items-center gap-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-          {["All", ...PROJECT_GROUPS].map((g) => (
+          {["All", ...groups].map((g) => (
             <button
               key={g}
               onClick={() => setGroupFilter(g)}

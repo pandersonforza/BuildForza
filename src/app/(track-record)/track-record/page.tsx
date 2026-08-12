@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Target, DollarSign, Clock, BarChart3 } from "lucide-react";
-import { PROJECT_GROUPS } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 
 interface TrackRecordProject {
   id: string;
@@ -40,6 +40,7 @@ export default function TrackRecordPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [groupFilter, setGroupFilter] = useState("All");
+  const groups = useGroups();
 
   useEffect(() => {
     setLoading(true);
@@ -60,7 +61,7 @@ export default function TrackRecordPage() {
         <div className="flex items-center gap-4">
         <h1 className="text-3xl font-bold">Track Record</h1>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-          {["All", ...PROJECT_GROUPS].map((g) => (
+          {["All", ...groups].map((g) => (
             <button
               key={g}
               onClick={() => setGroupFilter(g)}
@@ -89,7 +90,7 @@ export default function TrackRecordPage() {
       <div className="flex items-center gap-4">
         <h1 className="text-3xl font-bold">Track Record</h1>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-          {["All", ...PROJECT_GROUPS].map((g) => (
+          {["All", ...groups].map((g) => (
             <button
               key={g}
               onClick={() => setGroupFilter(g)}

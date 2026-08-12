@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { PROJECT_GROUPS } from '@/lib/constants';
 
 export const maxDuration = 30;
 
@@ -61,17 +60,20 @@ export async function POST(request: NextRequest) {
       orderBy: [{ project: { projectGroup: 'asc' } }, { date: 'asc' }],
     });
 
-    // Group by projectGroup, preserving PROJECT_GROUPS order
+    // Group by projectGroup, preserving DB sort order
+    const dbGroups = await prisma.group.findMany({ orderBy: { sortOrder: 'asc' }, select: { name: true } });
+    const groupOrder = dbGroups.map((g) => g.name);
+
     type InvoiceRow = typeof invoices[number];
     const groupMap = new Map<string, InvoiceRow[]>();
-    for (const g of PROJECT_GROUPS) groupMap.set(g, []);
+    for (const g of groupOrder) groupMap.set(g, []);
     groupMap.set('Unassigned', []);
     for (const inv of invoices) {
       const key = inv.project?.projectGroup ?? 'Unassigned';
       if (!groupMap.has(key)) groupMap.set(key, []);
       groupMap.get(key)!.push(inv);
     }
-    const groups = [...groupMap.entries()].filter(([, r]) => r.length > 0);
+    const groupEntries = [...groupMap.entries()].filter(([, r]) => r.length > 0);
 
     // ── Build PDF ─────────────────────────────────────────────
     const doc = await PDFDocument.create();
@@ -164,7 +166,7 @@ export async function POST(request: NextRequest) {
     hline(y);
     y -= 12;
 
-    for (const [group, rows] of groups) {
+    for (const [group, rows] of groupEntries) {
       draw(group, margin + 8, y, { size: 9 });
       draw(String(rows.length), margin + 140, y, { size: 9, color: muted });
       draw(formatCurrency(rows.reduce((s, r) => s + r.amount, 0)), pageWidth - margin, y, { size: 9, right: true });
@@ -179,7 +181,7 @@ export async function POST(request: NextRequest) {
     draw(formatCurrency(grandTotal), pageWidth - margin, y, { bold: true, size: 11, color: teal, right: true });
 
     // ── Detail pages (one per group, overflows to new pages automatically) ──
-    for (const [group, rows] of groups) {
+    for (const [group, rows] of groupEntries) {
       const subtotal = rows.reduce((s, r) => s + r.amount, 0);
 
       page = doc.addPage([pageWidth, pageHeight]);

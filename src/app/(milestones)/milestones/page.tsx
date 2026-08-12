@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { PROJECT_GROUPS } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 import { Download } from "lucide-react";
 import {
   PieChart,
@@ -37,6 +37,7 @@ export default function MilestonesOverviewPage() {
   const [milestones, setMilestones] = useState<MilestoneWithProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [groupFilter, setGroupFilter] = useState("All");
+  const groups = useGroups();
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -167,7 +168,7 @@ export default function MilestonesOverviewPage() {
       <div className="flex items-center gap-4">
         <h1 className="text-3xl font-bold">Milestones Overview</h1>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-          {["All", ...PROJECT_GROUPS].map((g) => (
+          {["All", ...groups].map((g) => (
             <button
               key={g}
               onClick={() => setGroupFilter(g)}

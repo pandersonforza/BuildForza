@@ -24,7 +24,7 @@ const navItems: NavItem[] = [
   { href: "/milestones", label: "Milestones" },
   { href: "/track-record", label: "Track Record" },
   { href: "/reports", label: "Reports" },
-  { href: "/admin/users", label: "Users", adminOnly: true },
+  { href: "/admin", label: "Admin", adminOnly: true },
 ];
 
 interface SidebarProps {

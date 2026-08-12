@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { PROJECT_STATUSES, PROJECT_STAGES, PROJECT_GROUPS } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 import type { Project } from "@/types";
 
 interface ProjectFormProps {
@@ -26,6 +27,7 @@ interface ProjectFormProps {
 export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectFormProps) {
   const isEdit = !!project;
   const { toast } = useToast();
+  const groups = useGroups();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<{
     name: string;
@@ -42,7 +44,7 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
     tenant: "",
     status: PROJECT_STATUSES[0],
     stage: PROJECT_STAGES[0],
-    projectGroup: PROJECT_GROUPS[0],
+    projectGroup: groups[0] || PROJECT_GROUPS[0],
   });
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
         tenant: project.tenant || "",
         status: project.status,
         stage: project.stage,
-        projectGroup: project.projectGroup || PROJECT_GROUPS[0],
+        projectGroup: project.projectGroup || groups[0] || PROJECT_GROUPS[0],
       });
     } else {
       setForm({
@@ -64,7 +66,7 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
         tenant: "",
         status: PROJECT_STATUSES[0],
         stage: PROJECT_STAGES[0],
-        projectGroup: PROJECT_GROUPS[0],
+        projectGroup: groups[0] || PROJECT_GROUPS[0],
       });
     }
   }, [project, open]);
@@ -154,7 +156,7 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
                 onChange={(e) => setForm({ ...form, projectGroup: e.target.value })}
                 className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
-                {PROJECT_GROUPS.map((g) => (
+                {groups.map((g) => (
                   <option key={g} value={g}>{g}</option>
                 ))}
               </select>

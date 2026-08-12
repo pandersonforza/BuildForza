@@ -5,7 +5,8 @@ import { Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select";
-import { PROJECT_GROUPS, PROJECT_STATUSES } from "@/lib/constants";
+import { PROJECT_STATUSES } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 import { exportReportToExcel, type ProjectCostRow } from "@/lib/reports-export";
 
 function fmt(n: number) {
@@ -14,6 +15,7 @@ function fmt(n: number) {
 
 export default function ReportsPage() {
   const [group, setGroup] = useState("All");
+  const groups = useGroups();
   const [status, setStatus] = useState("All");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -99,7 +101,7 @@ export default function ReportsPage() {
           className="w-36"
           options={[
             { value: "All", label: "All Groups" },
-            ...PROJECT_GROUPS.map((g) => ({ value: g, label: g })),
+            ...groups.map((g) => ({ value: g, label: g })),
           ]}
         />
 

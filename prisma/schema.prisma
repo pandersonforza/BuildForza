@@ -355,6 +355,13 @@ model BidLineItem {
   @@index([bidId])
 }
 
+model Group {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 model CloseoutItem {
   id         String    @id @default(cuid())
   projectId  String

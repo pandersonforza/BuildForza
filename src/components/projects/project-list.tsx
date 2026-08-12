@@ -11,7 +11,7 @@ import { ProjectForm } from "@/components/projects/project-form";
 import { useToast } from "@/components/ui/toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { PROJECT_GROUPS } from "@/lib/constants";
+import { useGroups } from "@/hooks/use-groups";
 import type { Project } from "@/types";
 
 interface ProjectListProps {
@@ -26,6 +26,7 @@ export function ProjectList({ projects, onMutate }: ProjectListProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { toast } = useToast();
   const { user, canEdit } = useAuth();
+  const groups = useGroups();
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -127,7 +128,7 @@ export function ProjectList({ projects, onMutate }: ProjectListProps) {
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">Projects</h1>
           <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-            {["All", ...PROJECT_GROUPS].map((g) => (
+            {["All", ...groups].map((g) => (
               <button
                 key={g}
                 onClick={() => setGroupFilter(g)}
