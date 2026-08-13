@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
-import { MessageSquare } from "lucide-react";
+import { CalendarDays, MessageSquare } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface Assignee {
@@ -158,9 +158,10 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
   return (
     <div className="space-y-3">
       {/* Estimated Closing Date */}
-      <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3">
+      <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4 border-l-4 border-l-primary">
+        <CalendarDays className="h-6 w-6 text-primary shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-medium">Estimated Closing Date</p>
+          <p className="text-base font-semibold">Estimated Closing Date</p>
           <p className="text-xs text-muted-foreground">Target date for transaction close</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -168,7 +169,8 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
           <DatePicker
             value={estimatedClosingDate}
             onChange={updateClosingDate}
-            className="w-36"
+            size="lg"
+            className="w-44"
           />
         </div>
       </div>

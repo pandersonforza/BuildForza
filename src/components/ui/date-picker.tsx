@@ -12,6 +12,7 @@ interface DatePickerProps {
   onChange: (value: string | null) => void;
   placeholder?: string;
   className?: string;
+  size?: "default" | "lg";
 }
 
 const DAY_PICKER_CLASSES = {
@@ -35,7 +36,7 @@ const DAY_PICKER_CLASSES = {
   hidden: "invisible",
 };
 
-export function DatePicker({ value, onChange, placeholder = "Set date", className }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = "Set date", className, size = "default" }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -75,15 +76,18 @@ export function DatePicker({ value, onChange, placeholder = "Set date", classNam
         type="button"
         onClick={handleOpen}
         className={cn(
-          "flex items-center gap-1.5 rounded border border-border bg-background px-1.5 py-0.5 text-xs transition-colors hover:bg-muted w-full",
+          "flex items-center gap-1.5 rounded border border-border bg-background transition-colors hover:bg-muted w-full",
+          size === "lg"
+            ? "px-3 py-2 text-sm font-medium"
+            : "px-1.5 py-0.5 text-xs",
           value ? "text-foreground" : "text-muted-foreground"
         )}
       >
-        <CalendarIcon className="h-3 w-3 shrink-0" />
+        <CalendarIcon className={cn("shrink-0", size === "lg" ? "h-4 w-4" : "h-3 w-3")} />
         <span className="flex-1 text-left truncate">{label}</span>
         {value && (
           <X
-            className="h-3 w-3 shrink-0 text-muted-foreground hover:text-foreground"
+            className={cn("shrink-0 text-muted-foreground hover:text-foreground", size === "lg" ? "h-4 w-4" : "h-3 w-3")}
             onClick={(e) => {
               e.stopPropagation();
               onChange(null);
