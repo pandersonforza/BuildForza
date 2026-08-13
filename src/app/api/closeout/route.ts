@@ -70,7 +70,7 @@ const DEFAULT_ITEMS: { category: string; title: string; sortOrder: number }[] = 
   { category: "10. Post-Closing", sortOrder: 3, title: "Close out project accounts, bonds, and remaining lender obligations" },
   { category: "10. Post-Closing", sortOrder: 4, title: "Distribute proceeds and prepare final accounting to investors / partners" },
   { category: "10. Post-Closing", sortOrder: 5, title: "Conduct project post-mortem / lessons-learned review" },
-  { category: "10. Post-Closing", sortOrder: 6, title: "Cut bonus checks for development team members" },
+  { category: "10. Post-Closing", sortOrder: 6, title: "Confirm bonus structure and send breakdown to accounts payable" },
 ];
 
 export async function GET(request: NextRequest) {
