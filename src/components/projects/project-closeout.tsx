@@ -74,6 +74,8 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
   const [users, setUsers] = useState<Assignee[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [estimatedClosingDate, setEstimatedClosingDate] = useState<string | null>(null);
+  const [savingDate, setSavingDate] = useState(false);
   const { toast } = useToast();
 
   const fetchItems = useCallback(async () => {
@@ -94,7 +96,32 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
       .then((r) => r.json())
       .then((data: Assignee[]) => setUsers(data))
       .catch(() => {});
-  }, [fetchItems]);
+    fetch(`/api/projects/${projectId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { estimatedClosingDate?: string | null } | null) => {
+        if (data?.estimatedClosingDate) {
+          setEstimatedClosingDate(data.estimatedClosingDate.slice(0, 10));
+        }
+      })
+      .catch(() => {});
+  }, [fetchItems, projectId]);
+
+  const updateClosingDate = async (date: string | null) => {
+    setEstimatedClosingDate(date);
+    setSavingDate(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estimatedClosingDate: date }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      toast({ title: "Error", description: "Failed to save closing date", variant: "destructive" });
+    } finally {
+      setSavingDate(false);
+    }
+  };
 
   const updateItem = async (id: string, patch: Partial<CloseoutItem>) => {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -130,6 +157,22 @@ export function ProjectCloseout({ projectId }: ProjectCloseoutProps) {
 
   return (
     <div className="space-y-3">
+      {/* Estimated Closing Date */}
+      <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3">
+        <div className="flex-1">
+          <p className="text-sm font-medium">Estimated Closing Date</p>
+          <p className="text-xs text-muted-foreground">Target date for transaction close</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {savingDate && <span className="text-xs text-muted-foreground">Saving…</span>}
+          <DatePicker
+            value={estimatedClosingDate}
+            onChange={updateClosingDate}
+            className="w-36"
+          />
+        </div>
+      </div>
+
       {/* Progress */}
       <div className="flex items-center gap-4 pb-1">
         <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">

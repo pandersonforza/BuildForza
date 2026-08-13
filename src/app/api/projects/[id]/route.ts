@@ -92,6 +92,7 @@ export async function PUT(
         ...(body.teamBonused !== undefined && { teamBonused: body.teamBonused }),
         ...(body.projectedTurnoverDate !== undefined && { projectedTurnoverDate: body.projectedTurnoverDate ? new Date(body.projectedTurnoverDate) : null }),
         ...(body.actualTurnoverDate !== undefined && { actualTurnoverDate: body.actualTurnoverDate ? new Date(body.actualTurnoverDate) : null }),
+        ...(body.estimatedClosingDate !== undefined && { estimatedClosingDate: body.estimatedClosingDate ? new Date(body.estimatedClosingDate) : null }),
       },
     });
 

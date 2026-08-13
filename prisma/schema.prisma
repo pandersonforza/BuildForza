@@ -95,6 +95,9 @@ model Project {
   projectedTurnoverDate DateTime?
   actualTurnoverDate    DateTime?
 
+  // Closeout
+  estimatedClosingDate  DateTime?
+
   budgetCategories BudgetCategory[]
   contracts        Contract[]
   drawRequests     DrawRequest[]
