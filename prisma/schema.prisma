@@ -66,8 +66,8 @@ model Project {
   name           String
   address        String
   tenant         String?
-  status         String   @default("Active")
-  stage          String   @default("Pre-Development")
+  status         String   @default("Planning")
+  stage          String   @default("Planning")
   startDate      DateTime?
   endDate        DateTime?
   totalBudget    Float     @default(0)

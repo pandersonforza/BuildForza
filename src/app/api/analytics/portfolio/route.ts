@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     const monthlyPaid = paidThisMonth._sum.amount ?? 0;
     const totalRemaining = totalBudget - totalSpent;
-    const activeProjects = projectsByStatus["Active"] ?? 0;
+    const activeProjects = projectsByStatus["Construction"] ?? 0;
 
     return NextResponse.json({
       monthlyPaid,

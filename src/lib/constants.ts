@@ -8,15 +8,13 @@ export const PROJECT_TYPES = [
 export const PROJECT_GROUPS = ["Forza", "F7B", "Harman", "H7B"] as const;
 
 export const PROJECT_STATUSES = [
-  "Active",
-  "On Hold",
-  "Completed",
-  "Dead",
+  "Planning",
+  "Construction",
+  "Closeout",
 ] as const;
 
 export const PROJECT_STAGES = [
-  "Pre-Development",
-  "Permitting",
+  "Planning",
   "Construction",
   "Closeout",
 ] as const;
@@ -157,10 +155,9 @@ export const DOCUMENT_CATEGORIES = [
 
 export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   // Project statuses
-  Active: { bg: "bg-emerald-900/40", text: "text-emerald-400" },
-  "On Hold": { bg: "bg-amber-900/40", text: "text-amber-400" },
-  Completed: { bg: "bg-blue-900/40", text: "text-blue-400" },
-  Dead: { bg: "bg-red-900/40", text: "text-red-400" },
+  Planning: { bg: "bg-blue-900/40", text: "text-blue-400" },
+  Construction: { bg: "bg-emerald-900/40", text: "text-emerald-400" },
+  Closeout: { bg: "bg-amber-900/40", text: "text-amber-400" },
 
   // Milestone statuses
   Pending: { bg: "bg-gray-800/50", text: "text-gray-400" },
@@ -204,8 +201,7 @@ export const TASK_STATUSES = ["pending", "completed"] as const;
 export const TASK_PRIORITIES = ["low", "medium", "high"] as const;
 
 export const STAGE_COLORS: Record<string, { bg: string; text: string }> = {
-  "Pre-Development": { bg: "bg-slate-800/50", text: "text-slate-400" },
-  Permitting: { bg: "bg-amber-900/40", text: "text-amber-400" },
+  Planning: { bg: "bg-blue-900/40", text: "text-blue-400" },
   Construction: { bg: "bg-emerald-900/40", text: "text-emerald-400" },
-  Closeout: { bg: "bg-blue-900/40", text: "text-blue-400" },
+  Closeout: { bg: "bg-amber-900/40", text: "text-amber-400" },
 };
