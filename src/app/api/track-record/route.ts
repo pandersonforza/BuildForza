@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   try {
     const group = request.nextUrl.searchParams.get("group");
-    const where: Record<string, unknown> = { status: "Closeout" };
+    const where: Record<string, unknown> = { status: "Completed" };
     if (group) where.projectGroup = group;
 
     const projects = await prisma.project.findMany({
