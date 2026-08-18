@@ -24,19 +24,12 @@ const ProjectSummaryTable = dynamic(
 export default function DashboardPage() {
   const [groupFilter, setGroupFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [stageFilter, setStageFilter] = useState<string | null>(null);
   const { data, isLoading, error } = usePortfolioAnalytics(groupFilter);
   const { canEdit } = useAuth();
   const groups = useGroups();
 
   const handleStatusClick = (status: string) => {
     setStatusFilter((prev) => (prev === status ? null : status));
-    setStageFilter(null);
-  };
-
-  const handleStageClick = (stage: string) => {
-    setStageFilter((prev) => (prev === stage ? null : stage));
-    setStatusFilter(null);
   };
 
   if (error) {
@@ -95,15 +88,12 @@ export default function DashboardPage() {
       <ProjectStatusChart
         group={groupFilter}
         activeStatusFilter={statusFilter}
-        activeStageFilter={stageFilter}
         onStatusClick={handleStatusClick}
-        onStageClick={handleStageClick}
       />
 
       <ProjectSummaryTable
         group={groupFilter}
         statusFilter={statusFilter}
-        stageFilter={stageFilter}
       />
     </div>
   );

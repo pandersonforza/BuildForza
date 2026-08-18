@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
-import { PROJECT_STATUSES, PROJECT_STAGES, PROJECT_GROUPS } from "@/lib/constants";
+import { PROJECT_STATUSES, PROJECT_GROUPS } from "@/lib/constants";
 import { useGroups } from "@/hooks/use-groups";
 import type { Project } from "@/types";
 
@@ -35,7 +35,6 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
     description: string;
     tenant: string;
     status: string;
-    stage: string;
     projectGroup: string;
   }>({
     name: "",
@@ -43,7 +42,6 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
     description: "",
     tenant: "",
     status: PROJECT_STATUSES[0],
-    stage: PROJECT_STAGES[0],
     projectGroup: groups[0] || PROJECT_GROUPS[0],
   });
 
@@ -55,7 +53,6 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
         description: project.description || "",
         tenant: project.tenant || "",
         status: project.status,
-        stage: project.stage,
         projectGroup: project.projectGroup || groups[0] || PROJECT_GROUPS[0],
       });
     } else {
@@ -65,7 +62,6 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
         description: "",
         tenant: "",
         status: PROJECT_STATUSES[0],
-        stage: PROJECT_STAGES[0],
         projectGroup: groups[0] || PROJECT_GROUPS[0],
       });
     }
@@ -81,7 +77,6 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
       description: form.description || undefined,
       tenant: form.tenant,
       status: form.status,
-      stage: form.stage,
       projectGroup: form.projectGroup,
     };
 
@@ -147,7 +142,7 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
             />
           </div>
 
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="projectGroup">Group</Label>
               <select
@@ -179,19 +174,6 @@ export function ProjectForm({ open, onOpenChange, project, onSuccess }: ProjectF
                 className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
                 {PROJECT_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="stage">Stage</Label>
-              <select
-                id="stage"
-                value={form.stage}
-                onChange={(e) => setForm({ ...form, stage: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              >
-                {PROJECT_STAGES.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>

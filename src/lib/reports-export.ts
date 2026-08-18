@@ -4,7 +4,6 @@ export interface ProjectCostRow {
   address: string | null;
   tenant: string | null;
   status: string;
-  stage: string | null;
   projectGroup: string | null;
   originalBudget: number;
   revisedBudget: number;

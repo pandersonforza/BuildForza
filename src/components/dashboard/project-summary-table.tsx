@@ -29,11 +29,9 @@ interface ProjectWithAggregates extends Project {
 export function ProjectSummaryTable({
   group,
   statusFilter,
-  stageFilter,
 }: {
   group?: string;
   statusFilter?: string | null;
-  stageFilter?: string | null;
 }) {
   const [projects, setProjects] = useState<ProjectWithAggregates[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,15 +57,10 @@ export function ProjectSummaryTable({
 
   const displayed = projects.filter((p) => {
     if (statusFilter && p.status !== statusFilter) return false;
-    if (stageFilter && p.stage !== stageFilter) return false;
     return true;
   });
 
-  const tableTitle = statusFilter
-    ? `${statusFilter} Projects`
-    : stageFilter
-    ? `${stageFilter} Projects`
-    : "All Projects";
+  const tableTitle = statusFilter ? `${statusFilter} Projects` : "All Projects";
 
   if (isLoading) {
     return (
@@ -98,7 +91,6 @@ export function ProjectSummaryTable({
               <TableHead>Name</TableHead>
               <TableHead>Address</TableHead>
               <TableHead>Tenant</TableHead>
-              <TableHead>Stage</TableHead>
               <TableHead>Budget</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -119,9 +111,6 @@ export function ProjectSummaryTable({
                 </TableCell>
                 <TableCell>{project.tenant}</TableCell>
                 <TableCell>
-                  <StatusBadge status={project.stage} type="stage" />
-                </TableCell>
-                <TableCell>
                   <CurrencyDisplay amount={project.aggregates?.totalRevisedBudget || project.totalBudget} />
                 </TableCell>
                 <TableCell>
@@ -131,7 +120,7 @@ export function ProjectSummaryTable({
             ))}
             {displayed.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
+                <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
                   No projects found.
                 </TableCell>
               </TableRow>

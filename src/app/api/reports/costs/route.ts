@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
         address: true,
         tenant: true,
         status: true,
-        stage: true,
         projectGroup: true,
         budgetCategories: {
           select: {
@@ -74,7 +73,6 @@ export async function GET(request: NextRequest) {
         address: p.address,
         tenant: p.tenant,
         status: p.status,
-        stage: p.stage,
         projectGroup: p.projectGroup,
         originalBudget,
         revisedBudget,

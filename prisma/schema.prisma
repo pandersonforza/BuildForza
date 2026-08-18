@@ -67,7 +67,6 @@ model Project {
   address        String
   tenant         String?
   status         String   @default("Active")
-  stage          String   @default("Pre-Development")
   startDate      DateTime?
   endDate        DateTime?
   totalBudget    Float     @default(0)
@@ -111,7 +110,6 @@ model Project {
   closeoutItems    CloseoutItem[]
 
   @@index([status])
-  @@index([stage])
 }
 
 model Note {

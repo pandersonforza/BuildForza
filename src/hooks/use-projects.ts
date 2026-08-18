@@ -6,7 +6,6 @@ import type { Project } from "@/types";
 interface UseProjectsOptions {
   status?: string;
   type?: string;
-  stage?: string;
 }
 
 interface UseProjectsReturn {
@@ -28,7 +27,6 @@ export function useProjects(options: UseProjectsOptions = {}): UseProjectsReturn
       const params = new URLSearchParams();
       if (options.status) params.set("status", options.status);
       if (options.type) params.set("type", options.type);
-      if (options.stage) params.set("stage", options.stage);
 
       const query = params.toString();
       const url = `/api/projects${query ? `?${query}` : ""}`;
@@ -41,7 +39,7 @@ export function useProjects(options: UseProjectsOptions = {}): UseProjectsReturn
     } finally {
       setIsLoading(false);
     }
-  }, [options.status, options.type, options.stage]);
+  }, [options.status, options.type]);
 
   useEffect(() => {
     fetchProjects();

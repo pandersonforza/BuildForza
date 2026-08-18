@@ -176,7 +176,6 @@ export async function GET(
         name: project.name,
         totalBudget: project.totalBudget,
         status: project.status,
-        stage: project.stage,
       },
       budgetSummary,
       categorySummaries,

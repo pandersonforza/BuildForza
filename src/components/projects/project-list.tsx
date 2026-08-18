@@ -72,11 +72,6 @@ export function ProjectList({ projects, onMutate }: ProjectListProps) {
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
-      accessorKey: "stage",
-      header: "Stage",
-      cell: ({ row }) => <StatusBadge status={row.original.stage} type="stage" />,
-    },
-    {
       id: "actions",
       header: "",
       enableSorting: false,

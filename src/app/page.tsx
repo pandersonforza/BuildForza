@@ -52,10 +52,10 @@ function StatusBadge({ status }: { status: string }) {
 
 function ProjectsMockup() {
   const projects = [
-    { name: "Riverside Commons", address: "1450 River Bend Dr", tenant: "Whole Foods", stage: "Construction", status: "Active", budget: "$4,200,000" },
-    { name: "Meridian Office Park", address: "800 Commerce Blvd", tenant: "WeWork", stage: "Pre-Development", status: "Active", budget: "$7,800,000" },
-    { name: "Lakeview Flats", address: "220 Lakeview Ave", tenant: "—", stage: "Design", status: "On Hold", budget: "$2,900,000" },
-    { name: "Summit Ridge Plaza", address: "555 Summit Dr", tenant: "Target", stage: "Closeout", status: "Completed", budget: "$11,500,000" },
+    { name: "Riverside Commons", address: "1450 River Bend Dr", tenant: "Whole Foods", status: "Active", budget: "$4,200,000" },
+    { name: "Meridian Office Park", address: "800 Commerce Blvd", tenant: "WeWork", status: "Active", budget: "$7,800,000" },
+    { name: "Lakeview Flats", address: "220 Lakeview Ave", tenant: "—", status: "On Hold", budget: "$2,900,000" },
+    { name: "Summit Ridge Plaza", address: "555 Summit Dr", tenant: "Target", status: "Completed", budget: "$11,500,000" },
   ];
   return (
     <MockWindow title="PropHound — Projects">
@@ -71,7 +71,6 @@ function ProjectsMockup() {
             <tr className="border-b border-[#2a3540] text-[#8899a6]">
               <th className="text-left pb-2 pr-4">Name</th>
               <th className="text-left pb-2 pr-4">Tenant</th>
-              <th className="text-left pb-2 pr-4">Stage</th>
               <th className="text-right pb-2 pr-4">Budget</th>
               <th className="text-left pb-2">Status</th>
             </tr>
@@ -84,7 +83,6 @@ function ProjectsMockup() {
                   <div className="text-[10px] text-[#8899a6]">{p.address}</div>
                 </td>
                 <td className="py-2 pr-4 text-[#8899a6]">{p.tenant}</td>
-                <td className="py-2 pr-4 text-[#8899a6]">{p.stage}</td>
                 <td className="py-2 pr-4 text-right font-mono">{p.budget}</td>
                 <td className="py-2"><StatusBadge status={p.status} /></td>
               </tr>

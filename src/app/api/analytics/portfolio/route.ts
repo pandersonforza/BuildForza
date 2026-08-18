@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           status: true,
-          stage: true,
           totalBudget: true,
           budgetCategories: {
             select: {
@@ -58,7 +57,6 @@ export async function GET(request: NextRequest) {
     let totalCommitted = 0;
 
     const projectsByStatus: Record<string, number> = {};
-    const projectsByStage: Record<string, number> = {};
 
     const projectSummaries = projects.map((project) => {
       let projectCommitted = 0;
@@ -81,7 +79,6 @@ export async function GET(request: NextRequest) {
       totalCommitted += projectCommitted;
 
       projectsByStatus[project.status] = (projectsByStatus[project.status] ?? 0) + 1;
-      projectsByStage[project.stage] = (projectsByStage[project.stage] ?? 0) + 1;
 
       return {
         id: project.id,
@@ -90,7 +87,6 @@ export async function GET(request: NextRequest) {
         spent: projectSpent,
         committed: projectCommitted,
         status: project.status,
-        stage: project.stage,
       };
     });
 
@@ -116,7 +112,6 @@ export async function GET(request: NextRequest) {
       budgetVariance: totalBudget - totalSpent,
       budgetVariancePercent: totalBudget > 0 ? ((totalBudget - totalSpent) / totalBudget) * 100 : 0,
       projectsByStatus,
-      projectsByStage,
       topProjects,
     });
   } catch (error) {

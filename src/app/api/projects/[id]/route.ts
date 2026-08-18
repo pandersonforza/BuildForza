@@ -71,7 +71,6 @@ export async function PUT(
         ...(body.address !== undefined && { address: body.address }),
         ...(body.tenant !== undefined && { tenant: body.tenant }),
         ...(body.status !== undefined && { status: body.status }),
-        ...(body.stage !== undefined && { stage: body.stage }),
         ...(body.startDate !== undefined && { startDate: new Date(body.startDate) }),
         ...(body.endDate !== undefined && { endDate: body.endDate ? new Date(body.endDate) : null }),
         ...(body.totalBudget !== undefined && { totalBudget: body.totalBudget }),

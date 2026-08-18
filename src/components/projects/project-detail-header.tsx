@@ -54,7 +54,6 @@ export function ProjectDetailHeader({ project, budgetSummary, onMutate }: Projec
             </div>
             <div className="flex items-center gap-2 mt-2">
               <StatusBadge status={project.status} />
-              <StatusBadge status={project.stage} type="stage" />
             </div>
           </div>
           {canEdit && (

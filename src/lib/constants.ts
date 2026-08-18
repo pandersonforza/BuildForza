@@ -14,12 +14,6 @@ export const PROJECT_STATUSES = [
   "Dead",
 ] as const;
 
-export const PROJECT_STAGES = [
-  "Pre-Development",
-  "Permitting",
-  "Construction",
-  "Closeout",
-] as const;
 
 export const CATEGORY_GROUPS = [
   "Land",
@@ -203,9 +197,3 @@ export const TASK_STATUSES = ["pending", "completed"] as const;
 
 export const TASK_PRIORITIES = ["low", "medium", "high"] as const;
 
-export const STAGE_COLORS: Record<string, { bg: string; text: string }> = {
-  "Pre-Development": { bg: "bg-slate-800/50", text: "text-slate-400" },
-  Permitting: { bg: "bg-amber-900/40", text: "text-amber-400" },
-  Construction: { bg: "bg-emerald-900/40", text: "text-emerald-400" },
-  Closeout: { bg: "bg-blue-900/40", text: "text-blue-400" },
-};
