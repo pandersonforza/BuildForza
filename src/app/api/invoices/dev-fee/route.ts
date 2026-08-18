@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         submittedBy: user.name,
         submittedById: user.id,
         submittedDate: new Date(),
-        aiNotes: `Dev Fee Invoice\n\nMilestones:\n${milestoneLines}\n\n__devFeePdfMeta__${pdfMeta}`,
+        aiNotes: `Dev Fee Invoice\n\nMilestones:\n${milestoneLines}\n\n__devFeePdfMeta__${pdfMeta}\n\n__devFeeMilestoneIds__${JSON.stringify(milestones.map((m) => m.id))}`,
       },
     });
 

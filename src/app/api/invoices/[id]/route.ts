@@ -220,13 +220,32 @@ export async function PUT(
           );
         }
 
-        const invoice = await prisma.invoice.update({
-          where: { id },
-          data: {
-            status: 'Paid',
-            paidDate: new Date(),
-          },
-          include: INVOICE_INCLUDE,
+        // Parse dev fee milestone IDs if present, then mark each milestone as paid in the same transaction
+        const devFeeMilestoneMatch = existing.aiNotes?.match(/__devFeeMilestoneIds__([\s\S]+)$/);
+        const devFeeMilestoneIds: string[] = devFeeMilestoneMatch
+          ? (JSON.parse(devFeeMilestoneMatch[1]) as string[])
+          : [];
+
+        const invoice = await prisma.$transaction(async (tx) => {
+          if (devFeeMilestoneIds.length > 0) {
+            const milestones = await tx.milestone.findMany({
+              where: { id: { in: devFeeMilestoneIds } },
+              select: { id: true, devFee: true },
+            });
+            await Promise.all(
+              milestones.map((m) =>
+                tx.milestone.update({
+                  where: { id: m.id },
+                  data: { paidAmount: m.devFee, status: 'Completed', completedDate: new Date() },
+                })
+              )
+            );
+          }
+          return tx.invoice.update({
+            where: { id },
+            data: { status: 'Paid', paidDate: new Date() },
+            include: INVOICE_INCLUDE,
+          });
         });
 
         return NextResponse.json(invoice);
