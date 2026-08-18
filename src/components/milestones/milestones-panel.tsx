@@ -98,7 +98,8 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
   useEffect(() => {
     if (!invoiceDialogOpen) return;
     setInvoiceDate(new Date().toISOString().split("T")[0]);
-    setSelectedIds(new Set(milestones.map((m) => m.id)));
+    // Pre-select only unpaid milestones; already-paid ones default to unchecked
+    setSelectedIds(new Set(milestones.filter((m) => m.paidAmount === 0).map((m) => m.id)));
     Promise.all([
       fetch("/api/auth/users").then((r) => r.json()),
       fetch("/api/invoices/dev-fee").then((r) => r.json()),
