@@ -86,6 +86,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
   const [pdfParsing, setPdfParsing] = useState(false);
   const [pdfItems, setPdfItems] = useState<PdfExtractedItem[]>([]);
   const [retainagePct, setRetainagePct] = useState(10);
+  const [changeOrderAmount, setChangeOrderAmount] = useState(0);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
   // Download a blank template with line item descriptions
@@ -342,6 +343,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
         setApproverId("");
         setItems([]);
         setPdfItems([]);
+        setChangeOrderAmount(0);
       }
       onOpenChange(isOpen);
     },
@@ -401,10 +403,11 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
   const netAmount = (gross: number) => Math.round(gross * (1 - retainageRate) * 100) / 100;
   const itemsWithAmounts = items.filter((li) => li.currentAmount > 0);
   const totalCurrentBilled = itemsWithAmounts.reduce((sum, li) => sum + netAmount(li.currentAmount), 0);
+  const grandTotal = totalCurrentBilled + changeOrderAmount;
 
   const handleSave = async (submitForApproval = false) => {
-    if (itemsWithAmounts.length === 0) {
-      toast({ title: "No amounts entered", description: "Enter at least one line item amount", variant: "destructive" });
+    if (itemsWithAmounts.length === 0 && changeOrderAmount === 0) {
+      toast({ title: "No amounts entered", description: "Enter at least one line item amount or a change order amount", variant: "destructive" });
       return;
     }
 
@@ -424,23 +427,32 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
       const approverUser = users.find((u) => u.id === approverId);
 
       // Build line item breakdown for the description
-      const lineBreakdown = itemsWithAmounts
-        .map((li) => `${li.description}: ${formatCurrency(netAmount(li.currentAmount))}`)
-        .join("\n");
+      const lineBreakdown = [
+        ...itemsWithAmounts.map((li) => `${li.description}: ${formatCurrency(netAmount(li.currentAmount))}`),
+        ...(changeOrderAmount > 0 ? [`Change Order: ${formatCurrency(changeOrderAmount)} (no retainage)`] : []),
+      ].join("\n");
 
       // Store line item IDs and net amounts as JSON for budget distribution on approval
-      const payAppLineItems = itemsWithAmounts.map((li) => ({
-        lineItemId: li.lineItemId,
-        description: li.description,
-        amount: netAmount(li.currentAmount),
-      }));
+      // Change orders use lineItemId: null so the approval handler skips budget distribution for them
+      const payAppLineItems = [
+        ...itemsWithAmounts.map((li) => ({
+          lineItemId: li.lineItemId,
+          description: li.description,
+          amount: netAmount(li.currentAmount),
+        })),
+        ...(changeOrderAmount > 0
+          ? [{ lineItemId: null, description: "Change Order", amount: changeOrderAmount }]
+          : []),
+      ];
+
+      const itemCount = itemsWithAmounts.length + (changeOrderAmount > 0 ? 1 : 0);
 
       const body: Record<string, unknown> = {
         vendorName: gcCompany.trim(),
         invoiceNumber: appNumber ? `PA-${appNumber}` : null,
-        amount: totalCurrentBilled,
+        amount: grandTotal,
         date: periodTo,
-        description: `Pay Application${appNumber ? ` #${appNumber}` : ""} - ${itemsWithAmounts.length} line items`,
+        description: `Pay Application${appNumber ? ` #${appNumber}` : ""} - ${itemCount} line items`,
         projectId: projectId || null,
         budgetLineItemId: null,
         aiNotes: `Pay App Line Items:\n${lineBreakdown}\n\n__payAppLineItems__${JSON.stringify(payAppLineItems)}`,
@@ -482,7 +494,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
 
       toast({
         title: submitForApproval ? "Pay app submitted for approval" : "Pay app created",
-        description: `${formatCurrency(totalCurrentBilled)} across ${itemsWithAmounts.length} line items`,
+        description: `${formatCurrency(grandTotal)} across ${itemCount} line items`,
       });
       onSuccess();
       handleOpenChange(false);
@@ -695,10 +707,41 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
                       </tbody>
                     ))}
                   </tbody>
+                  {/* Change Orders section — not subject to retainage */}
+                  <tbody>
+                    <tr className="bg-primary/10 border-t-2 border-primary/20">
+                      <td colSpan={retainageRate > 0 ? 6 : 5} className="py-2 px-3 font-semibold text-foreground">
+                        Change Orders
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">not subject to retainage</span>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-1.5 px-3 text-sm text-muted-foreground">Change Order Amount</td>
+                      <td className="py-1.5 px-3 text-right text-muted-foreground">—</td>
+                      <td className="py-1.5 px-3 text-right text-muted-foreground">—</td>
+                      <td className="py-1.5 px-3 text-right">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="w-32 text-right h-7 text-sm"
+                          value={changeOrderAmount || ""}
+                          onChange={(e) => setChangeOrderAmount(parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                        />
+                      </td>
+                      {retainageRate > 0 && (
+                        <td className="py-1.5 px-3 text-right text-xs text-muted-foreground italic">
+                          {changeOrderAmount > 0 ? formatCurrency(changeOrderAmount) : "—"}
+                        </td>
+                      )}
+                      <td className="py-1.5 px-3 text-right text-muted-foreground">—</td>
+                    </tr>
+                  </tbody>
+
                   <tfoot>
                     <tr className="border-t-2 border-primary/20 font-semibold">
                       <td className="py-2 px-3">
-                        Total ({itemsWithAmounts.length} items)
+                        Total ({itemsWithAmounts.length} items{changeOrderAmount > 0 ? " + CO" : ""})
                       </td>
                       <td className="py-2 px-3 text-right">
                         {formatCurrency(items.reduce((s, li) => s + li.budget, 0))}
@@ -707,11 +750,11 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
                         {formatCurrency(items.reduce((s, li) => s + li.previouslyBilled, 0))}
                       </td>
                       <td className="py-2 px-3 text-right text-primary">
-                        {formatCurrency(items.reduce((s, li) => s + li.currentAmount, 0))}
+                        {formatCurrency(items.reduce((s, li) => s + li.currentAmount, 0) + changeOrderAmount)}
                       </td>
                       {retainageRate > 0 && (
                         <td className="py-2 px-3 text-right text-primary">
-                          {formatCurrency(totalCurrentBilled)}
+                          {formatCurrency(grandTotal)}
                         </td>
                       )}
                       <td className="py-2 px-3 text-right">
