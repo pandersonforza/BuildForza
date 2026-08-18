@@ -443,26 +443,33 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
 
       // Resolve or create the change order budget line item
       let resolvedCoLineItemId: string | null = coLineItemId;
-      if (changeOrderAmount > 0 && !resolvedCoLineItemId && hardCostCategoryId) {
-        try {
-          const coRes = await fetch("/api/budget-line-items", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              categoryId: hardCostCategoryId,
-              description: "Change Orders",
-              originalBudget: changeOrderAmount,
-              revisedBudget: changeOrderAmount,
-            }),
+      if (changeOrderAmount > 0 && !resolvedCoLineItemId) {
+        if (!hardCostCategoryId) {
+          toast({
+            title: "No Hard Costs category found",
+            description: "Add at least one Hard Costs category to the project budget before entering a change order.",
+            variant: "destructive",
           });
-          if (coRes.ok) {
-            const coLineItem = await coRes.json() as { id: string };
-            resolvedCoLineItemId = coLineItem.id;
-            setCoLineItemId(coLineItem.id);
-          }
-        } catch {
-          // Non-fatal: CO will still save but won't update a budget line item on approval
+          setStep("form");
+          return;
         }
+        const coRes = await fetch("/api/budget-line-items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            categoryId: hardCostCategoryId,
+            description: "Change Orders",
+            originalBudget: changeOrderAmount,
+            revisedBudget: changeOrderAmount,
+          }),
+        });
+        if (!coRes.ok) {
+          const err = await coRes.json().catch(() => ({}));
+          throw new Error((err as { error?: string }).error || "Failed to create Change Orders budget line item");
+        }
+        const coLineItem = await coRes.json() as { id: string };
+        resolvedCoLineItemId = coLineItem.id;
+        setCoLineItemId(coLineItem.id);
       }
 
       // Build line item breakdown for the description
