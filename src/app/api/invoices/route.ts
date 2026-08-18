@@ -89,15 +89,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Duplicate check — warn only when invoice number AND amount both match
-    if (!body.skipDuplicateCheck && body.invoiceNumber) {
-      const dupeWhere: Record<string, unknown> = {
-        invoiceNumber: body.invoiceNumber,
-        amount,
-      };
-      if (body.projectId) dupeWhere.projectId = body.projectId;
-
-      const duplicate = await prisma.invoice.findFirst({ where: dupeWhere });
+    // Duplicate check — warn only when same invoice number, amount, AND project all match
+    if (!body.skipDuplicateCheck && body.invoiceNumber && body.projectId) {
+      const duplicate = await prisma.invoice.findFirst({
+        where: { invoiceNumber: body.invoiceNumber, amount, projectId: body.projectId },
+      });
       if (duplicate) {
         return NextResponse.json(
           {
