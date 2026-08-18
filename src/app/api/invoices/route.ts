@@ -89,21 +89,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Duplicate check — warn if same vendor + invoice number + amount on same project
-    if (!body.skipDuplicateCheck) {
+    // Duplicate check — warn only when invoice number AND amount both match
+    if (!body.skipDuplicateCheck && body.invoiceNumber) {
       const dupeWhere: Record<string, unknown> = {
-        vendorName: { equals: vendorName, mode: 'insensitive' },
+        invoiceNumber: body.invoiceNumber,
         amount,
       };
       if (body.projectId) dupeWhere.projectId = body.projectId;
-      if (body.invoiceNumber) dupeWhere.invoiceNumber = body.invoiceNumber;
 
       const duplicate = await prisma.invoice.findFirst({ where: dupeWhere });
       if (duplicate) {
         return NextResponse.json(
           {
             error: 'duplicate',
-            message: `Potential duplicate: an invoice from "${vendorName}" for $${amount.toFixed(2)}${body.invoiceNumber ? ` (#${body.invoiceNumber})` : ''} already exists.`,
+            message: `Potential duplicate: invoice #${body.invoiceNumber} for $${amount.toFixed(2)} already exists.`,
             duplicateId: duplicate.id,
           },
           { status: 409 }
