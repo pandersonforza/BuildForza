@@ -62,7 +62,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
   const [invoiceVendorName, setInvoiceVendorName] = useState("Forza Development");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
   const [invoiceApproverId, setInvoiceApproverId] = useState("");
-  const [invoiceRemitTo, setInvoiceRemitTo] = useState("");
+  const [invoiceRemitTo, setInvoiceRemitTo] = useState("2180 S 1300 E #240, Salt Lake City, UT 84106");
   const [invoiceUsers, setInvoiceUsers] = useState<{ id: string; name: string }[]>([]);
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
