@@ -87,6 +87,8 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
   const [pdfItems, setPdfItems] = useState<PdfExtractedItem[]>([]);
   const [retainagePct, setRetainagePct] = useState(10);
   const [changeOrderAmount, setChangeOrderAmount] = useState(0);
+  const [coLineItemId, setCoLineItemId] = useState<string | null>(null);
+  const [hardCostCategoryId, setHardCostCategoryId] = useState<string | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
   // Download a blank template with line item descriptions
@@ -344,6 +346,8 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
         setItems([]);
         setPdfItems([]);
         setChangeOrderAmount(0);
+        setCoLineItemId(null);
+        setHardCostCategoryId(null);
       }
       onOpenChange(isOpen);
     },
@@ -372,6 +376,11 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
           (c) => c.categoryGroup === "Hard Costs" || c.categoryGroup === "Hard Cost"
         );
 
+        // Store first Hard Costs category ID for creating new CO line items
+        if (hardCostCategories.length > 0) {
+          setHardCostCategoryId(hardCostCategories[0].id);
+        }
+
         const formItems: PayAppFormItem[] = [];
         for (const cat of hardCostCategories) {
           for (const li of cat.lineItems) {
@@ -386,6 +395,12 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
           }
         }
         setItems(formItems);
+
+        // Find existing change order line item to link pay app CO amounts to
+        const coItem = formItems.find((item) =>
+          item.description.toLowerCase().includes("change order")
+        );
+        setCoLineItemId(coItem?.lineItemId ?? null);
       })
       .catch(() => {
         toast({ title: "Error", description: "Failed to load budget data", variant: "destructive" });
@@ -403,7 +418,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
   const netAmount = (gross: number) => Math.round(gross * (1 - retainageRate) * 100) / 100;
   const itemsWithAmounts = items.filter((li) => li.currentAmount > 0);
   const totalCurrentBilled = itemsWithAmounts.reduce((sum, li) => sum + netAmount(li.currentAmount), 0);
-  const grandTotal = totalCurrentBilled + changeOrderAmount;
+  const grandTotal = totalCurrentBilled + netAmount(changeOrderAmount);
 
   const handleSave = async (submitForApproval = false) => {
     if (itemsWithAmounts.length === 0 && changeOrderAmount === 0) {
@@ -426,14 +441,38 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
     try {
       const approverUser = users.find((u) => u.id === approverId);
 
+      // Resolve or create the change order budget line item
+      let resolvedCoLineItemId: string | null = coLineItemId;
+      if (changeOrderAmount > 0 && !resolvedCoLineItemId && hardCostCategoryId) {
+        try {
+          const coRes = await fetch("/api/budget-line-items", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              categoryId: hardCostCategoryId,
+              description: "Change Orders",
+              originalBudget: changeOrderAmount,
+              revisedBudget: changeOrderAmount,
+            }),
+          });
+          if (coRes.ok) {
+            const coLineItem = await coRes.json() as { id: string };
+            resolvedCoLineItemId = coLineItem.id;
+            setCoLineItemId(coLineItem.id);
+          }
+        } catch {
+          // Non-fatal: CO will still save but won't update a budget line item on approval
+        }
+      }
+
       // Build line item breakdown for the description
+      const coNet = netAmount(changeOrderAmount);
       const lineBreakdown = [
         ...itemsWithAmounts.map((li) => `${li.description}: ${formatCurrency(netAmount(li.currentAmount))}`),
-        ...(changeOrderAmount > 0 ? [`Change Order: ${formatCurrency(changeOrderAmount)} (no retainage)`] : []),
+        ...(changeOrderAmount > 0 ? [`Change Orders: ${formatCurrency(coNet)}`] : []),
       ].join("\n");
 
       // Store line item IDs and net amounts as JSON for budget distribution on approval
-      // Change orders use lineItemId: null so the approval handler skips budget distribution for them
       const payAppLineItems = [
         ...itemsWithAmounts.map((li) => ({
           lineItemId: li.lineItemId,
@@ -441,7 +480,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
           amount: netAmount(li.currentAmount),
         })),
         ...(changeOrderAmount > 0
-          ? [{ lineItemId: null, description: "Change Order", amount: changeOrderAmount }]
+          ? [{ lineItemId: resolvedCoLineItemId, description: "Change Orders", amount: coNet }]
           : []),
       ];
 
@@ -707,12 +746,11 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
                       </tbody>
                     ))}
                   </tbody>
-                  {/* Change Orders section — not subject to retainage */}
+                  {/* Change Orders section */}
                   <tbody>
                     <tr className="bg-primary/10 border-t-2 border-primary/20">
                       <td colSpan={retainageRate > 0 ? 6 : 5} className="py-2 px-3 font-semibold text-foreground">
                         Change Orders
-                        <span className="ml-2 text-xs font-normal text-muted-foreground">not subject to retainage</span>
                       </td>
                     </tr>
                     <tr className="border-b border-border/50">
@@ -730,8 +768,8 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
                         />
                       </td>
                       {retainageRate > 0 && (
-                        <td className="py-1.5 px-3 text-right text-xs text-muted-foreground italic">
-                          {changeOrderAmount > 0 ? formatCurrency(changeOrderAmount) : "—"}
+                        <td className="py-1.5 px-3 text-right text-muted-foreground">
+                          {changeOrderAmount > 0 ? formatCurrency(netAmount(changeOrderAmount)) : ""}
                         </td>
                       )}
                       <td className="py-1.5 px-3 text-right text-muted-foreground">—</td>
