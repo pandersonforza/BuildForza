@@ -712,7 +712,7 @@ export function InvoiceList({
           const pdfUrl = getInvoicePdfUrl(viewingInvoice.filePath, viewingInvoice.id, viewingInvoice.invoiceNumber);
 
           return (
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+            <DialogContent className="max-w-[100vw] w-screen h-screen rounded-none overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{isPayApp ? "Pay Application" : "Invoice"} — {viewingInvoice.vendorName}</DialogTitle>
                 <DialogDescription>
