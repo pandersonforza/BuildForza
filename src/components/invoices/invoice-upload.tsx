@@ -646,7 +646,7 @@ export function InvoiceUpload({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className={`max-h-[90vh] overflow-y-auto ${step === "review" && filePath ? "max-w-6xl" : step === "multi-review" ? "max-w-4xl" : "max-w-2xl"}`}>
+      <DialogContent className="max-w-[100vw] w-screen h-screen rounded-none overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {step === "upload" && "Upload Invoice"}
