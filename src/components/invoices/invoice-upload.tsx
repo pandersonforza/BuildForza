@@ -759,10 +759,10 @@ export function InvoiceUpload({
 
         {/* Step 3: Review */}
         {step === "review" && aiResult && (
-          <div className={`${filePath ? "grid grid-cols-2 gap-6" : ""}`}>
+          <div className={`flex-1 min-h-0 ${filePath ? "grid grid-cols-2 gap-6" : "overflow-y-auto"}`}>
             {/* PDF Preview */}
             {filePath && (
-              <div className="border border-border rounded-lg overflow-hidden h-[65vh]">
+              <div className="border border-border rounded-lg overflow-hidden h-full">
                 <iframe
                   src={filePath.startsWith('http') ? `/api/invoices/file?url=${encodeURIComponent(filePath)}` : filePath}
                   className="w-full h-full"
@@ -772,7 +772,7 @@ export function InvoiceUpload({
             )}
 
             {/* Form fields */}
-            <div className="space-y-4 overflow-y-auto max-h-[65vh] pr-1">
+            <div className="space-y-4 overflow-y-auto h-full pr-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="vendorName">Vendor Name</Label>

@@ -103,7 +103,7 @@ function DialogContent({
   if (fullScreen) {
     return createPortal(
       <div
-        className={cn("fixed inset-0 z-50 bg-card overflow-y-auto", className)}
+        className={cn("fixed inset-0 z-50 bg-card flex flex-col p-6 gap-4 overflow-hidden", className)}
         {...props}
       >
         <button
