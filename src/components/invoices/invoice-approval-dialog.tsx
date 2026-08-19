@@ -229,7 +229,7 @@ export function InvoiceApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[100vw] w-screen h-screen rounded-none flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-4 shrink-0 border-b border-border">
           <DialogTitle>Review {isPayApp ? "Pay Application" : "Invoice"}</DialogTitle>
           <DialogDescription>
