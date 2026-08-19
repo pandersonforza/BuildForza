@@ -646,7 +646,7 @@ export function InvoiceUpload({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="fixed inset-0 z-50 max-w-none rounded-none overflow-y-auto">
+      <DialogContent fullScreen>
         <DialogHeader>
           <DialogTitle>
             {step === "upload" && "Upload Invoice"}

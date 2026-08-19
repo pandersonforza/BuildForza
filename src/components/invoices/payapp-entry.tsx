@@ -573,7 +573,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="fixed inset-0 z-50 max-w-none rounded-none overflow-y-auto">
+      <DialogContent fullScreen>
         <DialogHeader>
           <DialogTitle>
             {step === "form" ? "Pay Application Entry" : "Creating Invoices"}
