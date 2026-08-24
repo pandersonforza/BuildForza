@@ -221,7 +221,7 @@ export default function TrackRecordPage() {
                               </Badge>
                             ) : "—"}
                           </td>
-                          <td className="py-2 px-3 text-right">{p.irr != null ? `${p.irr.toFixed(1)}%` : "—"}</td>
+                          <td className="py-2 px-3 text-right">{p.irr != null ? `${p.irr.toFixed(2)}%` : "—"}</td>
                           <td className="py-2 px-3 text-right">{p.equityMultiple != null ? `${p.equityMultiple.toFixed(2)}x` : "—"}</td>
                           <td className="py-2 px-3 text-right">{p.profitAmount != null ? formatCurrency(p.profitAmount) : "—"}</td>
                           <td className="py-2 px-3 text-right">{p.holdPeriodMonths != null ? `${p.holdPeriodMonths} days` : "—"}</td>

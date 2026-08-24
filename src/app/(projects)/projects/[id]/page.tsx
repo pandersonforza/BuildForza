@@ -323,7 +323,7 @@ function TrackRecordCard({ project, onMutate }: { project: Record<string, unknow
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">IRR</p>
-                <p className="font-semibold">{project.irr != null ? `${(project.irr as number).toFixed(1)}%` : "—"}</p>
+                <p className="font-semibold">{project.irr != null ? `${(project.irr as number).toFixed(2)}%` : "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Equity Multiple</p>
