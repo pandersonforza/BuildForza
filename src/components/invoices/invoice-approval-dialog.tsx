@@ -89,10 +89,10 @@ export function InvoiceApprovalDialog({
         const dupes = all.filter((inv) => {
           if (inv.id === invoice.id) return false;
           if (inv.status === "Rejected") return false;
-          const sameInvoiceNumber = invoice.invoiceNumber && inv.invoiceNumber &&
-            inv.invoiceNumber.trim().toLowerCase() === invoice.invoiceNumber.trim().toLowerCase();
-          const sameAmount = Math.abs(inv.amount - invoice.amount) < 0.01;
-          return sameInvoiceNumber || sameAmount;
+          if (!invoice.invoiceNumber || !inv.invoiceNumber) return false;
+          const sameInvoiceNumber = inv.invoiceNumber.trim().toLowerCase() === invoice.invoiceNumber.trim().toLowerCase();
+          const sameProject = inv.project?.name === invoice.project?.name;
+          return sameInvoiceNumber && sameProject;
         });
         setDuplicates(dupes);
       })
