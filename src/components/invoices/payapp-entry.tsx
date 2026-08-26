@@ -696,7 +696,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
               </div>
             ) : (
               <div className="overflow-x-auto border border-border rounded-lg">
-                <table className="w-full text-sm">
+                <table className="w-full min-w-max text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/30 text-left text-muted-foreground">
                       <th className="py-2 px-3">Line Item</th>
