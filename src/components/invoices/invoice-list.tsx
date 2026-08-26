@@ -523,10 +523,12 @@ export function InvoiceList({
           </button>
           {canEdit && (
             <>
-              <Button variant="outline" onClick={() => setPayAppOpen(true)}>
-                <FileText className="h-4 w-4 mr-2" />
-                Pay App Entry
-              </Button>
+              {projectId && (
+                <Button variant="outline" onClick={() => setPayAppOpen(true)}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Pay App Entry
+                </Button>
+              )}
               <Button onClick={() => setUploadOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Upload Invoice
