@@ -382,21 +382,6 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                     Generate Dev Fee Invoice
                   </Button>
                 )}
-                <label className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    className="hidden"
-                    onChange={handleUploadAgreement}
-                    disabled={uploading}
-                  />
-                  {uploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                  {uploading ? "Processing..." : "Upload Dev Agreement"}
-                </label>
                 <Button
                   onClick={() => {
                     setEditMilestone(undefined);
@@ -413,7 +398,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
         <CardContent>
           {milestones.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">
-              No milestones yet. Click &quot;Add Milestone&quot; or upload a dev agreement to get started.
+              No milestones yet. Click &quot;Add Milestone&quot; to get started.
             </p>
           ) : (
             <div className="overflow-x-auto">
