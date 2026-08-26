@@ -573,7 +573,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent fullScreen>
+      <DialogContent fullScreen className="overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {step === "form" ? "Pay Application Entry" : "Creating Invoices"}
@@ -586,7 +586,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
         </DialogHeader>
 
         {step === "form" && (
-          <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-1">
+          <div className="space-y-4">
             {/* Header info */}
             <div className="grid grid-cols-4 gap-4">
               <div className="space-y-2">
@@ -695,8 +695,8 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
                 No hard cost line items found in this project&apos;s budget. Add line items to the budget first.
               </div>
             ) : (
-              <div className="overflow-x-auto border border-border rounded-lg">
-                <table className="w-full min-w-max text-sm">
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/30 text-left text-muted-foreground">
                       <th className="py-2 px-3">Line Item</th>
