@@ -91,6 +91,12 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
   const [hardCostCategoryId, setHardCostCategoryId] = useState<string | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  // Required pay app PDF attachment
+  const [requiredPdfFile, setRequiredPdfFile] = useState<File | null>(null);
+  const [requiredPdfUrl, setRequiredPdfUrl] = useState("");
+  const [requiredPdfUploading, setRequiredPdfUploading] = useState(false);
+  const requiredPdfRef = useRef<HTMLInputElement>(null);
+
   // Download a blank template with line item descriptions
   const handleDownloadTemplate = async () => {
     const XLSX = await import("xlsx");
@@ -335,6 +341,44 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
     });
   };
 
+  // Upload the required pay app PDF to Vercel Blob immediately on selection
+  const handleRequiredPdfSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "File too large", description: "PDF must be under 50 MB", variant: "destructive" });
+      return;
+    }
+
+    setRequiredPdfFile(file);
+    setRequiredPdfUrl("");
+    setRequiredPdfUploading(true);
+
+    try {
+      const { upload } = await import("@vercel/blob/client");
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const pathname = `invoices/${Date.now()}-${safeName}`;
+      const blob = await upload(pathname, file, {
+        access: "private",
+        handleUploadUrl: "/api/invoices/upload",
+      });
+      setRequiredPdfUrl(blob.url);
+      toast({ title: "Pay app PDF attached", description: file.name });
+    } catch (err) {
+      toast({
+        title: "Upload failed",
+        description: err instanceof Error ? err.message : "Could not upload PDF",
+        variant: "destructive",
+      });
+      setRequiredPdfFile(null);
+      setRequiredPdfUrl("");
+    } finally {
+      setRequiredPdfUploading(false);
+    }
+  };
+
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
@@ -348,6 +392,9 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
         setChangeOrderAmount(0);
         setCoLineItemId(null);
         setHardCostCategoryId(null);
+        setRequiredPdfFile(null);
+        setRequiredPdfUrl("");
+        setRequiredPdfUploading(false);
       }
       onOpenChange(isOpen);
     },
@@ -421,6 +468,11 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
   const grandTotal = totalCurrentBilled + netAmount(changeOrderAmount);
 
   const handleSave = async (submitForApproval = false) => {
+    if (!requiredPdfUrl) {
+      toast({ title: "Pay app PDF required", description: "Upload the pay application PDF before saving", variant: "destructive" });
+      return;
+    }
+
     if (itemsWithAmounts.length === 0 && changeOrderAmount === 0) {
       toast({ title: "No amounts entered", description: "Enter at least one line item amount or a change order amount", variant: "destructive" });
       return;
@@ -501,6 +553,7 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
         description: `Pay Application${appNumber ? ` #${appNumber}` : ""} - ${itemCount} line items`,
         projectId: projectId || null,
         budgetLineItemId: null,
+        filePath: requiredPdfUrl || null,
         aiNotes: `Pay App Line Items:\n${lineBreakdown}\n\n__payAppLineItems__${JSON.stringify(payAppLineItems)}`,
       };
 
@@ -625,6 +678,51 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
                   placeholder="0"
                 />
               </div>
+            </div>
+
+            {/* Required PDF attachment */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1 text-sm font-medium">
+                Pay Application PDF <span className="text-destructive">*</span>
+              </Label>
+              {requiredPdfUrl ? (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-emerald-500/40 bg-emerald-500/5 text-sm">
+                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span className="truncate text-foreground">{requiredPdfFile?.name}</span>
+                  <button
+                    type="button"
+                    className="ml-auto shrink-0 text-xs text-muted-foreground hover:text-foreground underline"
+                    onClick={() => {
+                      setRequiredPdfFile(null);
+                      setRequiredPdfUrl("");
+                      if (requiredPdfRef.current) requiredPdfRef.current.value = "";
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-dashed border-destructive/50 text-destructive hover:text-destructive hover:bg-destructive/5"
+                  onClick={() => requiredPdfRef.current?.click()}
+                  disabled={requiredPdfUploading}
+                >
+                  {requiredPdfUploading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</>
+                  ) : (
+                    <><Upload className="h-4 w-4 mr-2" />Upload Pay App PDF</>
+                  )}
+                </Button>
+              )}
+              <input
+                ref={requiredPdfRef}
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={handleRequiredPdfSelect}
+              />
             </div>
 
             {/* Import/Export buttons */}
@@ -916,8 +1014,8 @@ export function PayAppEntry({ open, onOpenChange, projectId, onSuccess }: PayApp
 
             <DialogFooter>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button variant="outline" onClick={() => handleSave(false)}>Save as Drafts</Button>
-              <Button onClick={() => handleSave(true)}>Submit for Approval</Button>
+              <Button variant="outline" onClick={() => handleSave(false)} disabled={!requiredPdfUrl || requiredPdfUploading}>Save as Drafts</Button>
+              <Button onClick={() => handleSave(true)} disabled={!requiredPdfUrl || requiredPdfUploading}>Submit for Approval</Button>
             </DialogFooter>
           </div>
         )}
