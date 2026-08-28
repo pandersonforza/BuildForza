@@ -528,7 +528,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
               teamBonused ? "" : completedCount === milestones.length ? "text-amber-500" : ""
             }`}>
               <div>
-                <p className="text-sm font-medium">Team Bonused</p>
+                <p className="text-sm font-medium">Project Completion Bonus</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {teamBonused
                     ? "The team has been bonused out for this project."
@@ -557,7 +557,7 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
                     </svg>
                   )}
                 </div>
-                {teamBonused ? "Bonused" : "Mark as Bonused"}
+                {teamBonused ? "Bonus Paid" : "Mark as Paid"}
               </button>
             </div>
           )}
