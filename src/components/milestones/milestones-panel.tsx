@@ -529,11 +529,6 @@ export function MilestonesPanel({ projectId }: MilestonesPanelProps) {
             }`}>
               <div>
                 <p className="text-sm font-medium">Project Completion Bonus</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {teamBonused
-                    ? "The team has been bonused out for this project."
-                    : "Mark this once the team bonus has been paid out."}
-                </p>
               </div>
               <button
                 onClick={() => canEdit && !isTogglingBonus && handleToggleBonused()}
